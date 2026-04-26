@@ -10,19 +10,19 @@ import defaultApps from './data/apps.json';
 
 // ============ TYPES ============
 interface AppData {
-  id: number;
-  name: string;
-  version: string;
-  description: string;
-  apk_link: string;
-  badge: string;
-  icon: string;
-  downloads: string;
-  size: string;
-  category: string;
-  rating: string;
-  updated: string;
-  published: boolean;
+  "id": 1,
+  "name": "WhatsApp Chat Analyzer",
+  "version": "1.0.0",
+  "description": "Analyze your WhatsApp chats and get personality insights with SunRise Apps!",
+  "apk_link": "https://github.com/obhanuprakash143-cpu/sunrise-apps-website/releases/download/v1.0.0/SunRise_WA_Analyzer_v1.apk",
+  "badge": "New",
+  "icon": "MessageSquare",
+  "downloads": "100+",
+  "size": "8.4 MB",
+  "category": "Tools",
+  "rating": "5.0",
+  "updated": "27-04-2026",
+  "published": true
 }
 
 // ============ CONFIG ============
@@ -142,7 +142,7 @@ const AppCard = ({ app, onDownload, unlocked }: { app: AppData; onDownload: (a: 
   const handleShare = () => {
     const text = `🌅 Check out "${app.name}" on SunRise Apps!\n📲 Download free: ${window.location.href}`;
     if (navigator.share) {
-      navigator.share({ title: app.name, text, url: window.location.href }).catch(() => {});
+      navigator.share({ title: app.name, text, url: window.location.href }).catch(() => { });
     } else {
       navigator.clipboard.writeText(text);
       alert('Link copied! Share it on Instagram Story 📸');
@@ -554,11 +554,10 @@ const AdminPage = ({ apps, setApps, onLogout }: { apps: AppData[]; setApps: (a: 
                 <div className="flex gap-1.5 shrink-0">
                   {/* Publish/Unpublish Toggle */}
                   <button onClick={() => togglePublish(app.id)}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all border ${
-                      app.published
-                        ? 'bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/20'
-                        : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
-                    }`}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all border ${app.published
+                      ? 'bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/20'
+                      : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
+                      }`}
                     title={app.published ? 'Click to Unpublish' : 'Click to Publish'}>
                     {app.published ? <Eye size={14} /> : <EyeOff size={14} />}
                   </button>
@@ -602,60 +601,76 @@ const AdminPage = ({ apps, setApps, onLogout }: { apps: AppData[]; setApps: (a: 
 const GuidePage = () => {
   const [openStep, setOpenStep] = useState<number | null>(0);
   const steps = [
-    { title: '1. GitHub — APK Hosting (Free)', icon: '🐙', content: [
-      '→ github.com → Create account → New repo "my-apps"',
-      '→ Releases → Create release → Drag APK file',
-      '→ Publish → Copy download URL → Paste in Admin Panel',
-      '', '💡 GitHub = unlimited free APK hosting!'
-    ]},
-    { title: '2. Vercel — Deploy Website (Free)', icon: '🚀', content: [
-      '→ vercel.com → Sign in with GitHub',
-      '→ Import your website repo → Framework: Vite → Deploy',
-      '→ Live at: sunrise-apps.vercel.app',
-      '', '⚙️ Custom domain: Settings → Domains → Add sunriseapps.in',
-      '  • Buy from GoDaddy (~₹500/yr)',
-      '  • DNS: CNAME → cname.vercel-dns.com'
-    ]},
-    { title: '3. Google AdSense (Earn Money 💰)', icon: '💰', content: [
-      '→ adsense.google.com → Add website URL',
-      '→ Paste verification code in index.html <head>',
-      '', '📋 Requirements (all included!):',
-      '  ✅ Privacy Policy  ✅ About  ✅ Contact',
-      '  ✅ 15+ days old domain  ✅ Original content',
-      '', '💡 Earnings: ₹100-₹2000/day based on traffic'
-    ]},
-    { title: '4. AdMob — In-App Ads', icon: '📱', content: [
-      '→ admob.google.com → Add app → Create ad units',
-      '→ "Watch Ad to Unlock" modal = rewarded ad placeholder',
-      '', '💡 Rewarded ads pay 5-10x more than banners!'
-    ]},
-    { title: '5. Instagram Strategy 📸', icon: '📸', content: [
-      '→ Account: @SunRise_Apps',
-      '→ Bio: "Free Viral Apps 📲 Link below 👇"',
-      '', '🎬 Reel Ideas:',
-      '  • "This app EXPOSES your partner 😱"',
-      '  • "Your WiFi password is... 🔓"',
-      '', '📊 Strategy: 2-3 Reels/day + trending audio',
-      '🎯 10K followers = ₹500-1000/day from ads'
-    ]},
-    { title: '6. Publish Your App', icon: '🚀', content: [
-      '→ Open Admin Panel (private link / logo 5-tap)',
-      '→ Click "+ Add App" → Fill all details',
-      '→ App is saved as 📝 Draft (hidden)',
-      '→ Click 🟢 eye icon to Publish (goes live!)',
-      '→ Click again to 📝 Unpublish (hide from website)',
-      '', '💡 You can publish/unpublish anytime — no code changes!'
-    ]},
-    { title: '7. Track Analytics 📊', icon: '📊', content: [
-      '→ Google Analytics → Create property → Add tracking code',
-      '→ GitHub Releases → See download counts per APK',
-      '→ Admin Panel → Update download numbers manually'
-    ]},
-    { title: '8. Legal & Safety ⚖️', icon: '⚖️', content: [
-      '✅ Privacy Policy, About, Contact — all included',
-      '⚠️ Only publish YOUR apps — no pirated content',
-      '⚠️ Test everything before publishing'
-    ]},
+    {
+      title: '1. GitHub — APK Hosting (Free)', icon: '🐙', content: [
+        '→ github.com → Create account → New repo "my-apps"',
+        '→ Releases → Create release → Drag APK file',
+        '→ Publish → Copy download URL → Paste in Admin Panel',
+        '', '💡 GitHub = unlimited free APK hosting!'
+      ]
+    },
+    {
+      title: '2. Vercel — Deploy Website (Free)', icon: '🚀', content: [
+        '→ vercel.com → Sign in with GitHub',
+        '→ Import your website repo → Framework: Vite → Deploy',
+        '→ Live at: sunrise-apps.vercel.app',
+        '', '⚙️ Custom domain: Settings → Domains → Add sunriseapps.in',
+        '  • Buy from GoDaddy (~₹500/yr)',
+        '  • DNS: CNAME → cname.vercel-dns.com'
+      ]
+    },
+    {
+      title: '3. Google AdSense (Earn Money 💰)', icon: '💰', content: [
+        '→ adsense.google.com → Add website URL',
+        '→ Paste verification code in index.html <head>',
+        '', '📋 Requirements (all included!):',
+        '  ✅ Privacy Policy  ✅ About  ✅ Contact',
+        '  ✅ 15+ days old domain  ✅ Original content',
+        '', '💡 Earnings: ₹100-₹2000/day based on traffic'
+      ]
+    },
+    {
+      title: '4. AdMob — In-App Ads', icon: '📱', content: [
+        '→ admob.google.com → Add app → Create ad units',
+        '→ "Watch Ad to Unlock" modal = rewarded ad placeholder',
+        '', '💡 Rewarded ads pay 5-10x more than banners!'
+      ]
+    },
+    {
+      title: '5. Instagram Strategy 📸', icon: '📸', content: [
+        '→ Account: @SunRise_Apps',
+        '→ Bio: "Free Viral Apps 📲 Link below 👇"',
+        '', '🎬 Reel Ideas:',
+        '  • "This app EXPOSES your partner 😱"',
+        '  • "Your WiFi password is... 🔓"',
+        '', '📊 Strategy: 2-3 Reels/day + trending audio',
+        '🎯 10K followers = ₹500-1000/day from ads'
+      ]
+    },
+    {
+      title: '6. Publish Your App', icon: '🚀', content: [
+        '→ Open Admin Panel (private link / logo 5-tap)',
+        '→ Click "+ Add App" → Fill all details',
+        '→ App is saved as 📝 Draft (hidden)',
+        '→ Click 🟢 eye icon to Publish (goes live!)',
+        '→ Click again to 📝 Unpublish (hide from website)',
+        '', '💡 You can publish/unpublish anytime — no code changes!'
+      ]
+    },
+    {
+      title: '7. Track Analytics 📊', icon: '📊', content: [
+        '→ Google Analytics → Create property → Add tracking code',
+        '→ GitHub Releases → See download counts per APK',
+        '→ Admin Panel → Update download numbers manually'
+      ]
+    },
+    {
+      title: '8. Legal & Safety ⚖️', icon: '⚖️', content: [
+        '✅ Privacy Policy, About, Contact — all included',
+        '⚠️ Only publish YOUR apps — no pirated content',
+        '⚠️ Test everything before publishing'
+      ]
+    },
   ];
 
   return (
@@ -691,7 +706,7 @@ const GuidePage = () => {
         <div className="mt-12 bg-gradient-to-br from-sunrise/10 to-golden/5 border border-sunrise/20 rounded-3xl p-6 text-center">
           <p className="text-sunrise text-lg font-bold mb-4">🎯 Checklist</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left max-w-md mx-auto">
-            {['GitHub account','Upload APK','Deploy on Vercel','Instagram @SunRise_Apps','Apply AdSense','First Reel','Track Analytics','Add more apps!'].map((item, i) => (
+            {['GitHub account', 'Upload APK', 'Deploy on Vercel', 'Instagram @SunRise_Apps', 'Apply AdSense', 'First Reel', 'Track Analytics', 'Add more apps!'].map((item, i) => (
               <label key={i} className="flex items-center gap-2 text-sm text-white/40 cursor-pointer hover:text-white/60">
                 <input type="checkbox" className="accent-orange-500 w-4 h-4" />{item}
               </label>
