@@ -1,35 +1,31 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from './supabaseClient';
+import { Session } from '@supabase/supabase-js';
 import {
   Sun, Download, Share2, Lock, Shield, Mail,
   Globe, ChevronDown, ChevronRight, Menu, X, Star, Users, Smartphone,
   Settings, Plus, Trash2, Edit3, Save, Eye, EyeOff, BarChart3, BookOpen,
   Check, Copy, ArrowUp, Search, Filter, LogOut, KeyRound, AlertTriangle,
-  ToggleLeft, ToggleRight
+  ToggleLeft, ToggleRight, RefreshCw, Loader2, Image as ImageIcon
 } from 'lucide-react';
-import defaultApps from './data/apps.json';
 
 // ============ TYPES ============
 interface AppData {
-  "id": 1,
-  "name": "WhatsApp Chat Analyzer",
-  "version": "1.0.0",
-  "description": "Analyze your WhatsApp chats and get personality insights with SunRise Apps!",
-  "apk_link": "https://github.com/obhanuprakash143-cpu/sunrise-apps-website/releases/download/v1.0.0/SunRise_WA_Analyzer_v1.apk",
-  "badge": "New",
-  "icon": "MessageSquare",
-  "downloads": "100+",
-  "size": "8.4 MB",
-  "category": "Tools",
-  "rating": "5.0",
-  "updated": "27-04-2026",
-  "published": true
+  id: number;
+  name: string;
+  version: string;
+  description: string;
+  apk_link: string;
+  badge: 'New' | 'Viral' | 'PRO' | string;
+  icon: string;
+  downloads: string;
+  size: string;
+  category: string;
+  rating: string;
+  updated: string;
+  published: boolean;
+  created_at?: string;
 }
-
-// ============ CONFIG ============
-const ADMIN_PASSWORD = 'sunrise@2025';
-const ADMIN_SECRET_KEY = 'sunrise2025';
-const STORAGE_KEY = 'sunrise_apps_data';
-const ADMIN_AUTH_KEY = 'sunrise_admin_auth';
 
 // ============ HELPERS ============
 const formatDownloads = (num: string) => {
@@ -48,23 +44,22 @@ const getBadgeColors = (badge: string) => {
   }
 };
 
-const loadApps = (): AppData[] => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch { /* fallback */ }
-  return defaultApps as AppData[];
-};
-
-const saveApps = (apps: AppData[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
-};
-
-const isAdminLoggedIn = (): boolean => {
-  return sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
-};
-
 // ============ SMALL COMPONENTS ============
+
+const SkeletonCard = () => (
+  <div className="bg-[#0d0d0d] border border-white/[0.06] rounded-3xl p-5 animate-pulse">
+    <div className="flex gap-4 mb-4">
+      <div className="w-14 h-14 bg-white/5 rounded-2xl" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 bg-white/5 rounded w-3/4" />
+        <div className="h-3 bg-white/5 rounded w-1/2" />
+      </div>
+    </div>
+    <div className="h-3 bg-white/5 rounded w-full mb-2" />
+    <div className="h-3 bg-white/5 rounded w-2/3 mb-4" />
+    <div className="h-10 bg-white/5 rounded-xl w-full" />
+  </div>
+);
 
 const ScrollToTop = () => {
   const [show, setShow] = useState(false);
@@ -137,7 +132,7 @@ const LockModal = ({ app, onClose, onUnlock }: { app: AppData | null; onClose: (
   );
 };
 
-// ============ APP CARD (Public) ============
+// ============ APP CARD ============
 const AppCard = ({ app, onDownload, unlocked }: { app: AppData; onDownload: (a: AppData) => void; unlocked: boolean }) => {
   const handleShare = () => {
     const text = `🌅 Check out "${app.name}" on SunRise Apps!\n📲 Download free: ${window.location.href}`;
@@ -155,7 +150,9 @@ const AppCard = ({ app, onDownload, unlocked }: { app: AppData; onDownload: (a: 
         {app.badge === 'Viral' ? '🔥 ' : app.badge === 'PRO' ? '⭐ ' : '✨ '}{app.badge}
       </span>
       <div className="flex gap-4 mb-4">
-        <div className="w-14 h-14 shrink-0 bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl flex items-center justify-center text-2xl group-hover:border-sunrise/20 transition-colors">{app.icon}</div>
+        <div className="w-14 h-14 shrink-0 bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl flex items-center justify-center text-2xl group-hover:border-sunrise/20 transition-colors">
+          {app.icon || <ImageIcon size={24} className="text-white/20" />}
+        </div>
         <div className="min-w-0 flex-1">
           <h3 className="font-bold text-white text-[15px] leading-tight truncate">{app.name}</h3>
           <div className="flex items-center gap-2 mt-1 text-[11px] text-white/30">
@@ -185,18 +182,19 @@ const AppCard = ({ app, onDownload, unlocked }: { app: AppData; onDownload: (a: 
 };
 
 // ============ HOME PAGE ============
-const HomePage = ({ apps, onDownload, unlockedApps }: { apps: AppData[]; onDownload: (a: AppData) => void; unlockedApps: number[] }) => {
+const HomePage = ({ apps, onDownload, unlockedApps, loading }: { apps: AppData[]; onDownload: (a: AppData) => void; unlockedApps: number[]; loading: boolean }) => {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('All');
 
-  // 🔥 Only show PUBLISHED apps to visitors
   const publishedApps = apps.filter(a => a.published);
   const categories = ['All', ...Array.from(new Set(publishedApps.map(a => a.category)))];
+
   const filtered = publishedApps.filter(a => {
     const matchSearch = a.name.toLowerCase().includes(search.toLowerCase()) || a.description.toLowerCase().includes(search.toLowerCase());
     const matchCat = catFilter === 'All' || a.category === catFilter;
     return matchSearch && matchCat;
   });
+
   const totalDownloads = publishedApps.reduce((s, a) => s + (parseInt(a.downloads) || 0), 0);
 
   return (
@@ -255,7 +253,12 @@ const HomePage = ({ apps, onDownload, unlockedApps }: { apps: AppData[]; onDownl
               <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 pointer-events-none" />
             </div>
           </div>
-          {filtered.length === 0 ? (
+
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-20 text-white/20"><Search size={40} className="mx-auto mb-4" /><p>No apps found.</p></div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -271,21 +274,22 @@ const HomePage = ({ apps, onDownload, unlockedApps }: { apps: AppData[]; onDownl
 };
 
 // ============ ADMIN LOGIN ============
-const AdminLoginGate = ({ onLogin }: { onLogin: () => void }) => {
+const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
-  const [attempts, setAttempts] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
-      onLogin();
+    setLoading(true);
+    setError('');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setError(error.message);
+      setLoading(false);
     } else {
-      setError(true);
-      setAttempts(a => a + 1);
-      setPassword('');
-      setTimeout(() => setError(false), 3000);
+      onLogin();
     }
   };
 
@@ -297,24 +301,40 @@ const AdminLoginGate = ({ onLogin }: { onLogin: () => void }) => {
             <KeyRound className="text-sunrise" size={32} />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Admin Access</h2>
-          <p className="text-white/30 text-sm mb-8">This area is restricted to the site owner.</p>
-          {attempts >= 3 && (
-            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-red-400 text-sm">
-              <AlertTriangle size={16} /><span>Too many failed attempts!</span>
+          <p className="text-white/30 text-sm mb-8">Sign in with your Supabase credentials.</p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+              {error}
             </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter admin password" disabled={attempts >= 5}
-                className={`w-full bg-black/50 border rounded-xl pl-11 pr-4 py-3.5 text-white text-sm focus:outline-none placeholder:text-white/15 transition-colors ${error ? 'border-red-500/50' : 'border-white/10 focus:border-sunrise/50'}`} autoFocus />
-            </div>
-            {error && <p className="text-red-400 text-xs">❌ Wrong password!</p>}
-            <button type="submit" disabled={!password || attempts >= 5} className="w-full py-3.5 bg-gradient-to-r from-sunrise to-golden text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-              <Lock size={16} /> Unlock Admin Panel
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="admin@sunrise.com"
+              required
+              className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-sunrise/50 focus:outline-none placeholder:text-white/15"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm focus:border-sunrise/50 focus:outline-none placeholder:text-white/15"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 bg-gradient-to-r from-sunrise to-golden text-black font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? <Loader2 className="animate-spin" size={18} /> : <Lock size={18} />}
+              {loading ? 'Signing In...' : 'Unlock Admin Panel'}
             </button>
           </form>
-          <p className="text-white/10 text-[10px] mt-6">🔒 Protected area. Unauthorized access is prohibited.</p>
         </div>
       </div>
     </section>
@@ -322,73 +342,90 @@ const AdminLoginGate = ({ onLogin }: { onLogin: () => void }) => {
 };
 
 // ============ ADMIN PAGE ============
-const AdminPage = ({ apps, setApps, onLogout }: { apps: AppData[]; setApps: (a: AppData[]) => void; onLogout: () => void }) => {
+const AdminPage = ({
+  apps,
+  setApps,
+  onLogout,
+  session,
+  refreshApps,
+  isRefreshing
+}: {
+  apps: AppData[];
+  setApps: (a: AppData[]) => void;
+  onLogout: () => void;
+  session: Session | null;
+  refreshApps: () => Promise<void>;
+  isRefreshing: boolean;
+}) => {
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<AppData>({
-    id: 0, name: '', version: '', description: '', apk_link: '', badge: 'New', icon: '📱', downloads: '0', size: '', category: '', rating: '0', updated: '', published: false
+  const [form, setForm] = useState<Partial<AppData>>({
+    name: '', version: '1.0.0', description: '', apk_link: '', badge: 'New', icon: '📱', downloads: '0', size: '0 MB', category: 'Tools', rating: '0', updated: new Date().toISOString().slice(0, 10), published: false
   });
   const [jsonView, setJsonView] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
   const [adminFilter, setAdminFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [submitting, setSubmitting] = useState(false);
 
   const showMsg = (msg: string) => { setSaveMsg(msg); setTimeout(() => setSaveMsg(''), 3000); };
 
   const startEdit = (app: AppData) => { setForm({ ...app }); setEditingId(app.id); setShowAddForm(true); };
+
   const startAdd = () => {
-    const newId = apps.length > 0 ? Math.max(...apps.map(a => a.id)) + 1 : 1;
-    setForm({ id: newId, name: '', version: '1.0.0', description: '', apk_link: '', badge: 'New', icon: '📱', downloads: '0', size: '0 MB', category: 'Tools', rating: '0', updated: new Date().toISOString().slice(0, 10), published: false });
+    setForm({
+      name: '', version: '1.0.0', description: '', apk_link: '', badge: 'New',
+      icon: '📱', downloads: '0', size: '0 MB', category: 'Tools', rating: '0',
+      updated: new Date().toISOString().slice(0, 10), published: false
+    });
     setEditingId(null);
     setShowAddForm(true);
   };
-  const handleSave = () => {
-    if (!form.name.trim()) return;
-    let updated: AppData[];
-    if (editingId !== null) {
-      updated = apps.map(a => a.id === editingId ? { ...form } : a);
-    } else {
-      updated = [...apps, form];
+
+  const validateForm = () => {
+    if (!form.name?.trim()) { showMsg('❌ App name is required'); return false; }
+    if (form.apk_link && !form.apk_link.startsWith('http') && form.apk_link !== '#') {
+      showMsg('❌ APK link must be a valid URL or #'); return false;
     }
-    setApps(updated); saveApps(updated); setShowAddForm(false); setEditingId(null);
-    showMsg(editingId !== null ? '✅ App updated!' : '✅ App added as Draft!');
+    return true;
   };
-  const handleDelete = (id: number) => {
+
+  const handleSave = async () => {
+    if (!validateForm()) return;
+    setSubmitting(true);
+
+    try {
+      if (editingId !== null) {
+        const { error } = await supabase.from('apps').update(form).eq('id', editingId);
+        if (error) throw error;
+        showMsg('✅ App updated!');
+      } else {
+        const { error } = await supabase.from('apps').insert([form]);
+        if (error) throw error;
+        showMsg('✅ App added!');
+      }
+      await refreshApps();
+      setShowAddForm(false);
+      setEditingId(null);
+    } catch (err: any) {
+      showMsg(`❌ Error: ${err.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
     if (!confirm('Delete this app permanently?')) return;
-    const updated = apps.filter(a => a.id !== id);
-    setApps(updated); saveApps(updated); showMsg('🗑️ App deleted');
+    const { error } = await supabase.from('apps').delete().eq('id', id);
+    if (error) showMsg(`❌ Delete failed: ${error.message}`);
+    else showMsg('🗑️ App deleted');
+    await refreshApps();
   };
 
-  // 🔥 PUBLISH / UNPUBLISH TOGGLE
-  const togglePublish = (id: number) => {
-    const updated = apps.map(a => {
-      if (a.id === id) return { ...a, published: !a.published };
-      return a;
-    });
-    const app = updated.find(a => a.id === id);
-    setApps(updated); saveApps(updated);
-    showMsg(app?.published ? `🟢 "${app.name}" Published!` : `🔴 "${app?.name}" Unpublished`);
+  const togglePublish = async (id: number, current: boolean) => {
+    const { error } = await supabase.from('apps').update({ published: !current }).eq('id', id);
+    if (error) showMsg(`❌ Toggle failed: ${error.message}`);
+    else showMsg(!current ? '🟢 Published!' : '🔴 Unpublished');
   };
-
-  // Publish ALL / Unpublish ALL
-  const publishAll = () => {
-    const updated = apps.map(a => ({ ...a, published: true }));
-    setApps(updated); saveApps(updated); showMsg('🟢 All apps published!');
-  };
-  const unpublishAll = () => {
-    const updated = apps.map(a => ({ ...a, published: false }));
-    setApps(updated); saveApps(updated); showMsg('🔴 All apps unpublished');
-  };
-
-  const handleCopyJson = () => { navigator.clipboard.writeText(JSON.stringify(apps, null, 2)); setCopied(true); setTimeout(() => setCopied(false), 2000); };
-  const handleResetData = () => {
-    if (!confirm('Reset to default apps? Your changes will be lost.')) return;
-    localStorage.removeItem(STORAGE_KEY); setApps(defaultApps as AppData[]); showMsg('🔄 Data reset to default');
-  };
-
-  const totalDownloads = apps.reduce((s, a) => s + (parseInt(a.downloads) || 0), 0);
-  const publishedCount = apps.filter(a => a.published).length;
-  const draftCount = apps.filter(a => !a.published).length;
 
   const filteredApps = apps.filter(a => {
     if (adminFilter === 'published') return a.published;
@@ -396,43 +433,44 @@ const AdminPage = ({ apps, setApps, onLogout }: { apps: AppData[]; setApps: (a: 
     return true;
   });
 
+  const publishedCount = apps.filter(a => a.published).length;
+  const draftCount = apps.filter(a => !a.published).length;
+
   return (
     <section className="pt-28 pb-20 px-4">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
         <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
           <div>
             <h2 className="text-3xl font-bold text-white flex items-center gap-3">
               <Settings className="text-sunrise" size={28} /> Admin Panel
             </h2>
-            <p className="text-white/30 text-sm mt-1">Manage, publish & unpublish your apps</p>
+            <p className="text-white/30 text-sm mt-1">Manage your apps securely via Supabase</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setJsonView(!jsonView)} className="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white/50 text-xs hover:text-white transition-colors flex items-center gap-1.5">
-              {jsonView ? <Eye size={13} /> : <BarChart3 size={13} />} {jsonView ? 'Cards' : 'JSON'}
+            <button onClick={refreshApps} disabled={isRefreshing} className="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white/50 text-xs hover:text-white transition-colors flex items-center gap-1.5 disabled:opacity-50">
+              {isRefreshing ? <Loader2 className="animate-spin" size={13} /> : <RefreshCw size={13} />} Refresh
+            </button>
+            <button onClick={() => setJsonView(!jsonView)} className="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white/50 text-xs hover:text-white transition-colors">
+              {jsonView ? 'Cards' : 'JSON'}
             </button>
             <button onClick={startAdd} className="px-3 py-2 bg-gradient-to-r from-sunrise to-golden text-black font-semibold rounded-xl text-xs flex items-center gap-1.5 hover:opacity-90">
               <Plus size={13} /> Add App
             </button>
-            <button onClick={onLogout} className="px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs flex items-center gap-1.5 hover:bg-red-500/20" title="Logout">
+            <button onClick={onLogout} className="px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs flex items-center gap-1.5 hover:bg-red-500/20">
               <LogOut size={13} />
             </button>
           </div>
         </div>
 
-        {/* Success Toast */}
         {saveMsg && (
           <div className="mb-6 p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm text-center">{saveMsg}</div>
         )}
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
           {[
             { label: 'Total', value: apps.length, color: 'text-white' },
             { label: 'Published', value: publishedCount, color: 'text-green-400' },
             { label: 'Drafts', value: draftCount, color: 'text-amber-400' },
-            { label: 'Downloads', value: formatDownloads(totalDownloads.toString()), color: 'text-sunrise' },
-            { label: 'Viral', value: apps.filter(a => a.badge === 'Viral').length, color: 'text-rose-400' },
           ].map((s, i) => (
             <div key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-3">
               <p className="text-white/25 text-[10px]">{s.label}</p>
@@ -441,7 +479,6 @@ const AdminPage = ({ apps, setApps, onLogout }: { apps: AppData[]; setApps: (a: 
           ))}
         </div>
 
-        {/* Filter Tabs + Bulk Actions */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
           {(['all', 'published', 'draft'] as const).map(f => (
             <button key={f} onClick={() => setAdminFilter(f)}
@@ -449,16 +486,8 @@ const AdminPage = ({ apps, setApps, onLogout }: { apps: AppData[]; setApps: (a: 
               {f === 'all' ? `All (${apps.length})` : f === 'published' ? `🟢 Published (${publishedCount})` : `📝 Drafts (${draftCount})`}
             </button>
           ))}
-          <div className="flex-1" />
-          <button onClick={publishAll} className="px-3 py-1.5 text-[10px] text-green-400/50 hover:text-green-400 border border-green-400/10 hover:border-green-400/30 rounded-lg transition-colors">
-            Publish All
-          </button>
-          <button onClick={unpublishAll} className="px-3 py-1.5 text-[10px] text-amber-400/50 hover:text-amber-400 border border-amber-400/10 hover:border-amber-400/30 rounded-lg transition-colors">
-            Unpublish All
-          </button>
         </div>
 
-        {/* Add/Edit Form */}
         {showAddForm && (
           <div className="bg-white/[0.03] border border-sunrise/20 rounded-3xl p-6 mb-8">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -478,13 +507,13 @@ const AdminPage = ({ apps, setApps, onLogout }: { apps: AppData[]; setApps: (a: 
               ].map(f => (
                 <div key={f.key}>
                   <label className="block text-xs text-white/30 mb-1.5">{f.label}</label>
-                  <input value={String((form as unknown as Record<string, string>)[f.key] || '')} onChange={e => setForm({ ...form, [f.key]: e.target.value })} placeholder={f.placeholder}
+                  <input value={String((form as any)[f.key] || '')} onChange={e => setForm({ ...form, [f.key]: e.target.value })} placeholder={f.placeholder}
                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-sunrise/50 focus:outline-none placeholder:text-white/15" />
                 </div>
               ))}
               <div className="md:col-span-2">
                 <label className="block text-xs text-white/30 mb-1.5">Description</label>
-                <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Short app description..." rows={2}
+                <textarea value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Short app description..." rows={2}
                   className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-sunrise/50 focus:outline-none resize-none placeholder:text-white/15" />
               </div>
               <div>
@@ -499,99 +528,55 @@ const AdminPage = ({ apps, setApps, onLogout }: { apps: AppData[]; setApps: (a: 
                 <label className="block text-xs text-white/30 mb-1.5">Status</label>
                 <button type="button" onClick={() => setForm({ ...form, published: !form.published })}
                   className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${form.published ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'}`}>
-                  <span>{form.published ? '🟢 Published — Live on website' : '📝 Draft — Hidden from visitors'}</span>
+                  <span>{form.published ? '🟢 Published' : '📝 Draft'}</span>
                   {form.published ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
                 </button>
               </div>
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={handleSave} className="px-6 py-2.5 bg-gradient-to-r from-sunrise to-golden text-black font-semibold rounded-xl text-sm flex items-center gap-2 hover:opacity-90">
-                <Save size={14} /> {editingId !== null ? 'Update App' : 'Add App'}
+              <button onClick={handleSave} disabled={submitting} className="px-6 py-2.5 bg-gradient-to-r from-sunrise to-golden text-black font-semibold rounded-xl text-sm flex items-center gap-2 hover:opacity-90 disabled:opacity-50">
+                {submitting ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                {editingId !== null ? 'Update App' : 'Add App'}
               </button>
               <button onClick={() => { setShowAddForm(false); setEditingId(null); }} className="px-6 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white/50 text-sm hover:text-white">Cancel</button>
             </div>
           </div>
         )}
 
-        {/* JSON View */}
         {jsonView ? (
           <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-white/40">apps.json</h3>
-              <div className="flex gap-2">
-                <button onClick={handleCopyJson} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/40 hover:text-white flex items-center gap-1.5">
-                  {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} />} {copied ? 'Copied!' : 'Copy'}
-                </button>
-                <button onClick={handleResetData} className="px-3 py-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-xs text-rose-400 hover:bg-rose-500/20">Reset</button>
-              </div>
-            </div>
-            <pre className="text-xs text-white/50 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-[500px] overflow-y-auto">{JSON.stringify(apps, null, 2)}</pre>
+            <pre className="text-xs text-white/50 overflow-x-auto whitespace-pre-wrap font-mono max-h-[500px] overflow-y-auto">{JSON.stringify(apps, null, 2)}</pre>
           </div>
         ) : (
           <div className="space-y-3">
             {filteredApps.length === 0 ? (
               <div className="text-center py-16 text-white/20"><Plus size={40} className="mx-auto mb-4" /><p>No apps in this view.</p></div>
             ) : filteredApps.map(app => (
-              <div key={app.id} className={`bg-white/[0.03] border rounded-2xl p-4 flex items-center gap-3 transition-all ${app.published ? 'border-green-500/15 hover:border-green-500/30' : 'border-white/[0.06] hover:border-amber-500/30 opacity-70'}`}>
-                {/* Icon */}
+              <div key={app.id} className={`bg-white/[0.03] border rounded-2xl p-4 flex items-center gap-3 transition-all ${app.published ? 'border-green-500/15' : 'border-white/[0.06] opacity-70'}`}>
                 <div className="w-11 h-11 shrink-0 bg-white/5 rounded-xl flex items-center justify-center text-lg">{app.icon}</div>
-
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-semibold text-white text-sm truncate">{app.name}</h4>
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold text-white bg-gradient-to-r ${getBadgeColors(app.badge)}`}>{app.badge}</span>
                     {app.published ? (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-green-500/15 text-green-400 border border-green-500/20">🟢 Live</span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-green-500/15 text-green-400">🟢 Live</span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-amber-500/15 text-amber-400 border border-amber-500/20">📝 Draft</span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-amber-500/15 text-amber-400">📝 Draft</span>
                     )}
                   </div>
-                  <p className="text-white/25 text-xs mt-0.5">v{app.version} • {app.size} • {formatDownloads(app.downloads)} downloads</p>
+                  <p className="text-white/25 text-xs mt-0.5">v{app.version} • {app.size}</p>
                 </div>
-
-                {/* Action Buttons */}
                 <div className="flex gap-1.5 shrink-0">
-                  {/* Publish/Unpublish Toggle */}
-                  <button onClick={() => togglePublish(app.id)}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all border ${app.published
-                      ? 'bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/20'
-                      : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
-                      }`}
-                    title={app.published ? 'Click to Unpublish' : 'Click to Publish'}>
+                  <button onClick={() => togglePublish(app.id, app.published)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all border ${app.published ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'}`}>
                     {app.published ? <Eye size={14} /> : <EyeOff size={14} />}
                   </button>
-                  {/* Edit */}
-                  <button onClick={() => startEdit(app)} className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/30 hover:text-sunrise hover:border-sunrise/30 transition-colors" title="Edit">
-                    <Edit3 size={14} />
-                  </button>
-                  {/* Delete */}
-                  <button onClick={() => handleDelete(app.id)} className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/30 hover:text-rose-400 hover:border-rose-400/30 transition-colors" title="Delete">
-                    <Trash2 size={14} />
-                  </button>
+                  <button onClick={() => startEdit(app)} className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/30 hover:text-sunrise"><Edit3 size={14} /></button>
+                  <button onClick={() => handleDelete(app.id)} className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/30 hover:text-rose-400"><Trash2 size={14} /></button>
                 </div>
               </div>
             ))}
-            {apps.length > 0 && (
-              <div className="flex justify-end pt-4">
-                <button onClick={handleResetData} className="px-4 py-2 text-xs text-rose-400/50 hover:text-rose-400 transition-colors">Reset to Default</button>
-              </div>
-            )}
           </div>
         )}
-
-        {/* Tips */}
-        <div className="mt-12 bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5">
-          <h4 className="text-sm font-semibold text-sunrise mb-3">📋 Admin Quick Reference</h4>
-          <ul className="space-y-2 text-white/30 text-xs">
-            <li>• 🟢 <span className="text-green-400">Published</span> = visible to all visitors on website</li>
-            <li>• 📝 <span className="text-amber-400">Draft</span> = hidden from visitors, only you can see in admin</li>
-            <li>• New apps are added as <span className="text-amber-400">Draft</span> by default — publish when ready</li>
-            <li>• Click the <span className="text-green-400">eye icon</span> to toggle publish/unpublish instantly</li>
-            <li>• Set apk_link to "#" for Coming Soon apps</li>
-            <li>• Data is saved in browser localStorage</li>
-          </ul>
-        </div>
       </div>
     </section>
   );
@@ -812,44 +797,73 @@ const ContactSection = () => {
 
 // ============ MAIN APP ============
 export default function App() {
-  const [apps, setApps] = useState<AppData[]>(loadApps);
+  const [apps, setApps] = useState<AppData[]>([]);
   const [page, setPage] = useState('home');
   const [modalApp, setModalApp] = useState<AppData | null>(null);
   const [unlockedApps, setUnlockedApps] = useState<number[]>([]);
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [adminAuth, setAdminAuth] = useState(isAdminLoggedIn);
-  const [logoTaps, setLogoTaps] = useState(0);
 
-  // 🔗 Private URL access: yoursite.com?access=sunrise2025
+  // Supabase State
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // 1. Auth Check
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const accessKey = params.get('access');
-    if (accessKey === ADMIN_SECRET_KEY) {
-      sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
-      setAdminAuth(true);
-      setPage('admin');
-      window.history.replaceState({}, '', window.location.pathname);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // 2. Fetch Apps
+  const fetchApps = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const { data, error } = await supabase
+        .from('apps')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setApps(data || []);
+    } catch (err) {
+      console.error('Error fetching apps:', err);
+    } finally {
+      setRefreshing(false);
+      setLoading(false);
     }
   }, []);
 
-  // ⌨️ Ctrl+Shift+A shortcut
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-        e.preventDefault();
-        setPage('admin');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+    fetchApps();
+  }, [fetchApps]);
 
-  // 📱 Logo 5-tap secret
+  // 3. Real-time Subscription
   useEffect(() => {
-    if (logoTaps >= 5) { setPage('admin'); setLogoTaps(0); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-    if (logoTaps > 0) { const t = setTimeout(() => setLogoTaps(0), 2000); return () => clearTimeout(t); }
-  }, [logoTaps]);
+    const channel = supabase
+      .channel('apps-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'apps' }, () => {
+        fetchApps();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchApps]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setPage('home');
+  };
 
   const handleDownload = useCallback((app: AppData) => {
     if (unlockedApps.includes(app.id)) window.open(app.apk_link, '_blank');
@@ -857,10 +871,12 @@ export default function App() {
   }, [unlockedApps]);
 
   const handleUnlock = useCallback(() => {
-    if (modalApp) { setUnlockedApps(prev => [...prev, modalApp.id]); window.open(modalApp.apk_link, '_blank'); setModalApp(null); }
+    if (modalApp) {
+      setUnlockedApps(prev => [...prev, modalApp.id]);
+      window.open(modalApp.apk_link, '_blank');
+      setModalApp(null);
+    }
   }, [modalApp]);
-
-  const handleAdminLogout = () => { sessionStorage.removeItem(ADMIN_AUTH_KEY); setAdminAuth(false); navigate('home'); };
 
   const navigate = (p: string) => { setPage(p); setMobileMenu(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
@@ -871,24 +887,32 @@ export default function App() {
     { id: 'contact', label: 'Contact', icon: <Mail size={15} /> },
   ];
 
+  if (loading && page === 'home') {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="text-sunrise animate-spin" size={40} />
+          <p className="text-white/40 text-sm">Loading SunRise Apps...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#050505] text-white">
-      {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-40 bg-[#050505]/90 backdrop-blur-xl border-b border-white/[0.06]">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo — 5 taps = admin */}
-            <button onClick={() => { if (page !== 'home') navigate('home'); else setLogoTaps(t => t + 1); }} className="flex items-center gap-2.5 group">
-              <div className={`w-9 h-9 bg-gradient-to-br from-sunrise to-golden rounded-xl flex items-center justify-center shadow-lg shadow-sunrise/20 group-hover:shadow-sunrise/40 transition-all ${logoTaps > 0 ? 'scale-90' : ''}`}>
+            <button onClick={() => navigate('home')} className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 bg-gradient-to-br from-sunrise to-golden rounded-xl flex items-center justify-center shadow-lg shadow-sunrise/20">
                 <Sun size={18} className="text-black" />
               </div>
               <div className="hidden sm:block">
                 <span className="font-bold text-white">Sun<span className="bg-gradient-to-r from-sunrise to-golden bg-clip-text text-transparent">Rise</span></span>
                 <span className="text-white/30 text-sm ml-1">Apps</span>
               </div>
-              {logoTaps >= 3 && <span className="text-[8px] text-white/10 ml-1">{5 - logoTaps}...</span>}
             </button>
-            {/* Desktop */}
+
             <div className="hidden md:flex items-center gap-1">
               {publicNavItems.map(item => (
                 <button key={item.id} onClick={() => navigate(item.id)}
@@ -896,7 +920,13 @@ export default function App() {
                   {item.icon}{item.label}
                 </button>
               ))}
+              {session && (
+                <button onClick={() => navigate('admin')} className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium ml-2 ${page === 'admin' ? 'text-sunrise bg-sunrise/10' : 'text-white/35 hover:text-white/70 hover:bg-white/5'}`}>
+                  <Settings size={15} /> Admin
+                </button>
+              )}
             </div>
+
             <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 text-white/50">
               {mobileMenu ? <X size={18} /> : <Menu size={18} />}
             </button>
@@ -904,20 +934,38 @@ export default function App() {
           {mobileMenu && (
             <div className="md:hidden py-2 pb-4 border-t border-white/[0.06]">
               {publicNavItems.map(item => (
-                <button key={item.id} onClick={() => navigate(item.id)}
-                  className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition-all ${page === item.id ? 'text-sunrise bg-sunrise/10' : 'text-white/40 hover:bg-white/5'}`}>
+                <button key={item.id} onClick={() => navigate(item.id)} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white/40 hover:bg-white/5">
                   {item.icon}{item.label}
                 </button>
               ))}
+              {session && (
+                <button onClick={() => navigate('admin')} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-sunrise hover:bg-sunrise/10">
+                  <Settings size={15} /> Admin Panel
+                </button>
+              )}
             </div>
           )}
         </div>
       </nav>
 
-      {/* Pages */}
-      {page === 'home' && <HomePage apps={apps} onDownload={handleDownload} unlockedApps={unlockedApps} />}
-      {page === 'admin' && (adminAuth ? <AdminPage apps={apps} setApps={setApps} onLogout={handleAdminLogout} /> : <AdminLoginGate onLogin={() => setAdminAuth(true)} />)}
-      {page === 'guide' && (adminAuth ? <GuidePage /> : <AdminLoginGate onLogin={() => setAdminAuth(true)} />)}
+      {page === 'home' && <HomePage apps={apps} onDownload={handleDownload} unlockedApps={unlockedApps} loading={loading || refreshing} />}
+
+      {page === 'admin' && (
+        session ? (
+          <AdminPage
+            apps={apps}
+            setApps={setApps}
+            onLogout={handleLogout}
+            session={session}
+            refreshApps={fetchApps}
+            isRefreshing={refreshing}
+          />
+        ) : (
+          <AdminLogin onLogin={() => setPage('admin')} />
+        )
+      )}
+
+      {page === 'guide' && <GuidePage />}
       {page === 'about' && <AboutSection />}
       {page === 'privacy' && <PrivacySection />}
       {page === 'contact' && <ContactSection />}
@@ -925,56 +973,14 @@ export default function App() {
       {page === 'home' && (
         <>
           <AboutSection />
-          <div className="max-w-4xl mx-auto px-4"><AdBanner variant="horizontal" /></div>
           <PrivacySection />
           <ContactSection />
         </>
       )}
 
-      {/* Admin bottom bar */}
-      {adminAuth && (page === 'admin' || page === 'guide') && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-sunrise/20">
-          <div className="max-w-md mx-auto flex">
-            <button onClick={() => navigate('admin')} className={`flex-1 py-3 text-center text-xs font-medium flex items-center justify-center gap-2 ${page === 'admin' ? 'text-sunrise' : 'text-white/30'}`}><Settings size={14} /> Admin</button>
-            <button onClick={() => navigate('guide')} className={`flex-1 py-3 text-center text-xs font-medium flex items-center justify-center gap-2 ${page === 'guide' ? 'text-sunrise' : 'text-white/30'}`}><BookOpen size={14} /> Guide</button>
-            <button onClick={() => navigate('home')} className="flex-1 py-3 text-center text-xs font-medium flex items-center justify-center gap-2 text-white/30 hover:text-white"><Eye size={14} /> View Site</button>
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <footer className={`border-t border-white/[0.06] py-10 px-4 ${adminAuth && (page === 'admin' || page === 'guide') ? 'pb-20' : ''}`}>
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-sunrise to-golden rounded-lg flex items-center justify-center"><Sun size={16} className="text-black" /></div>
-                <span className="font-bold text-white">SunRise Apps</span>
-              </div>
-              <p className="text-white/25 text-sm">Every sunrise brings new possibilities. Free viral Android tools, built in India 🇮🇳</p>
-            </div>
-            <div>
-              <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-3">Quick Links</p>
-              <div className="space-y-2">
-                {publicNavItems.map(item => (<button key={item.id} onClick={() => navigate(item.id)} className="block text-white/25 text-sm hover:text-sunrise transition-colors">{item.label}</button>))}
-              </div>
-            </div>
-            <div>
-              <p className="text-white/50 text-xs font-semibold uppercase tracking-wider mb-3">Connect</p>
-              <div className="space-y-2">
-                <a href="mailto:thesunrisecode@gmail.com" className="flex items-center gap-2 text-white/25 text-sm hover:text-sunrise transition-colors"><Mail size={14} /> thesunrisecode@gmail.com</a>
-                <a href="https://instagram.com/SunRise_Apps" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/25 text-sm hover:text-pink-400 transition-colors"><span>📸</span> @SunRise_Apps</a>
-                <a href="https://sunriseapps.in" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/25 text-sm hover:text-sunrise transition-colors"><Globe size={14} /> sunriseapps.in</a>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-white/[0.06] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-white/15 text-xs">© 2025 SunRise Apps. Made with 🧡 in India</p>
-            <div className="flex gap-4">
-              <button onClick={() => navigate('privacy')} className="text-white/15 text-xs hover:text-white/40">Privacy</button>
-              <button onClick={() => navigate('contact')} className="text-white/15 text-xs hover:text-white/40">Contact</button>
-            </div>
-          </div>
+      <footer className="border-t border-white/[0.06] py-10 px-4">
+        <div className="max-w-6xl mx-auto text-center text-white/15 text-xs">
+          © 2025 SunRise Apps. Powered by Supabase 🚀
         </div>
       </footer>
 
