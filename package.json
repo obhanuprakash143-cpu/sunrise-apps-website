@@ -11,7 +11,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.105.1",
     "clsx": "2.1.1",
-    "lucide-react": "^1.11.0",
+    "lucide-react": "^1.14.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "tailwind-merge": "3.4.0"
@@ -22,7 +22,9 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.1.1",
-    "tailwindcss": "4.1.17",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.13",
+    "tailwindcss": "^4.1.17",
     "typescript": "5.9.3",
     "vite": "7.2.4",
     "vite-plugin-singlefile": "2.3.0"
