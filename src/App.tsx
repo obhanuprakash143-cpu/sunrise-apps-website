@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from './supabaseClient';
+import { supabase } from './supabaseClient.ts';
 import { Session } from '@supabase/supabase-js';
 import {
   Sun, Download, Share2, Lock, Shield, Mail,
