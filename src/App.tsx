@@ -10,7 +10,7 @@ import {
   Upload, MessageSquare, CheckCircle, ChevronUp, Inbox,
   Sparkles, Zap, TrendingUp, Heart, Package, FileImage,
   BarChart3, Layers, DollarSign, FileText, ExternalLink,
-  Database, Github, Server, Key, ShieldCheck, Wifi,
+  Database, GitBranch, Server, Key, ShieldCheck, Wifi,
   HardDrive, MonitorSmartphone, Copy, Check
 } from 'lucide-react';
 
@@ -730,7 +730,7 @@ const TechDocsTab = () => {
 
       <Section title="Deployment" icon={<Server size={16} style={{ color: C.green }} />}>
         <Link label="Vercel Dashboard" url="https://vercel.com/dashboard" icon={<Server size={14} />} />
-        <Link label="GitHub Repository" url="https://github.com" icon={<Github size={14} />} />
+        <Link label="GitHub Repository" url="https://github.com" icon={<GitBranch size={14} />} />
         <div style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: 12, padding: '12px 14px', marginTop: 8 }}>
           <p style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.7 }}>
             <strong style={{ color: C.green }}>Deploy command:</strong> git add . → git commit -m "update" → git push<br />
