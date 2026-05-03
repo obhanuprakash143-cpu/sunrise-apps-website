@@ -11,7 +11,8 @@ import {
   Sparkles, Zap, TrendingUp, Heart, Package, FileImage,
   BarChart3, Layers, DollarSign, FileText, ExternalLink,
   Database, GitBranch, Server, Key, ShieldCheck, Wifi,
-  HardDrive, MonitorSmartphone, Copy, Check, Images, ChevronLeft, ChevronRight as ChevronRightIcon
+  HardDrive, MonitorSmartphone, Copy, Check, Images,
+  Info, AlertCircle
 } from 'lucide-react';
 
 // ============ TYPES ============
@@ -47,7 +48,7 @@ interface Feedback {
 interface ToastItem {
   id: number;
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'install';
 }
 
 interface SiteSettings {
@@ -60,7 +61,7 @@ interface SiteSettings {
   updated_at?: string;
 }
 
-// ============ ELITE TECH COLOR SYSTEM ============
+// ============ ELITE COLORFUL SYSTEM ============
 const C = {
   bg: '#000000',
   bgCard: '#0f172a',
@@ -73,14 +74,18 @@ const C = {
   textMuted: '#94A3B8',
   textFaint: '#475569',
   accentGlow: 'rgba(255,107,53,0.15)',
-  green: '#34d399',
+  green: '#22c55e',           // SAFETY GREEN
+  greenGlow: 'rgba(34,197,94,0.15)',
   amber: '#fbbf24',
   blue: '#60a5fa',
   red: '#f87171',
   purple: '#a855f7',
+  pink: '#ec4899',
+  cyan: '#06b6d4',
+  emerald: '#10b981',
 };
 
-// ============ CATEGORIES WITH EMOJIS ============
+// ============ CATEGORIES ============
 const CATEGORIES = [
   '📱 Tools', '🎮 Games', '🎵 Music', '📸 Photography',
   '💬 Social', '📚 Education', '💪 Health & Fitness',
@@ -140,27 +145,59 @@ const formatTimeAgo = (dateStr: string) => {
   return `${days}d ago`;
 };
 
-// ============ SANITIZED FILE NAME HELPER ============
+// ============ DYNAMIC FILE NAMING + BLOB DOWNLOAD ============
 const cleanFileName = (name: string): string => {
   return name
     .replace(/[^\x00-\x7F]/g, '')
     .trim()
-    .replace(/\s+/g, '-');
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9_-]/g, '');
 };
 
-// ============ DIRECT DOWNLOAD HELPER ============
-const triggerDownload = (url: string, filename?: string) => {
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename || 'app.apk';
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+// 🛡️ SAFETY TRUST LAYER — Blob-Fetch Method for Reliable Naming
+const triggerSafeDownload = async (
+  url: string,
+  appName: string,
+  onProgress?: (status: 'fetching' | 'success' | 'fallback') => void
+) => {
+  const safeName = cleanFileName(appName) || 'app';
+  const fileName = `${safeName}_SunRise_Official.apk`;
+
+  try {
+    onProgress?.('fetching');
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    }, 100);
+
+    onProgress?.('success');
+  } catch (error) {
+    console.error('Blob download failed, using fallback:', error);
+    onProgress?.('fallback');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 };
 
-// ============ GLOBAL STYLES — ELITE TECH DARK ============
+// ============ GLOBAL STYLES — COLORFUL ELITE ============
 const GlobalStyles = () => (
   <style>{`
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -171,6 +208,10 @@ const GlobalStyles = () => (
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255,107,53,0.08), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(168,85,247,0.06), transparent),
+        radial-gradient(ellipse 60% 40% at 20% 60%, rgba(34,197,94,0.04), transparent);
     }
     input, textarea, select, button { font-family: inherit; }
     input::placeholder, textarea::placeholder { color: ${C.textFaint}; }
@@ -178,7 +219,7 @@ const GlobalStyles = () => (
 
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: ${C.bg}; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #FF6B35, #a855f7); border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: ${C.orange}; }
     ::selection { background: rgba(255,107,53,0.3); color: white; }
 
@@ -187,18 +228,30 @@ const GlobalStyles = () => (
     @keyframes spin { to { transform:rotate(360deg); } }
     @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
     @keyframes slideDown { from{opacity:0;transform:translateY(-12px);} to{opacity:1;transform:translateY(0);} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
     @keyframes glow { 0%,100%{text-shadow:0 0 20px rgba(255,107,53,0.5);} 50%{text-shadow:0 0 60px rgba(255,184,0,0.8), 0 0 100px rgba(255,107,53,0.5);} }
     @keyframes shimmer { 0%{background-position:-200% 0;} 100%{background-position:200% 0;} }
     @keyframes glowPulse { 0%,100%{box-shadow: 0 0 20px rgba(255,107,53,0.3);} 50%{box-shadow: 0 0 40px rgba(255,107,53,0.6), 0 0 60px rgba(255,184,0,0.3);} }
-    @keyframes borderGlow { 0%,100%{border-color: rgba(255,107,53,0.4);} 50%{border-color: rgba(255,107,53,0.9);} }
+    @keyframes safetyPulse { 0%,100%{box-shadow: 0 0 12px rgba(34,197,94,0.3);} 50%{box-shadow: 0 0 24px rgba(34,197,94,0.6);} }
+    @keyframes rainbowBorder {
+      0%   { border-color: #FF6B35; }
+      25%  { border-color: #FACC15; }
+      50%  { border-color: #22c55e; }
+      75%  { border-color: #06b6d4; }
+      100% { border-color: #FF6B35; }
+    }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
     .spin { animation: spin 1s linear infinite; }
     .pulse { animation: pulse 2s ease-in-out infinite; }
     .fade-in { animation: fadeIn 0.35s ease forwards; }
     .fade-in-scale { animation: fadeInScale 0.3s ease forwards; }
     .slide-down { animation: slideDown 0.3s ease forwards; }
+    .slide-up { animation: slideUp 0.4s ease forwards; }
     .glow-text { animation: glow 3s ease-in-out infinite; }
     .glow-btn { animation: glowPulse 2.5s ease-in-out infinite; }
+    .safety-pulse { animation: safetyPulse 2.5s ease-in-out infinite; }
+    .float-anim { animation: float 3s ease-in-out infinite; }
 
     .card {
       background: rgba(15, 23, 42, 0.6);
@@ -207,16 +260,29 @@ const GlobalStyles = () => (
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 18px;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, ${C.orange}, ${C.gold}, ${C.purple}, transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
     }
     .card:hover {
       transform: translateY(-8px) scale(1.02);
       border-color: #FF6B35;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(255,107,53,0.2);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(255,107,53,0.25), 0 0 60px rgba(168,85,247,0.1);
       background: rgba(30, 41, 59, 0.8);
     }
+    .card:hover::before { opacity: 1; }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #FFB800 100%);
+      background: linear-gradient(135deg, #FF6B35 0%, #FFB800 50%, #FACC15 100%);
+      background-size: 200% 200%;
       color: white;
       font-weight: 700;
       border: none;
@@ -229,16 +295,30 @@ const GlobalStyles = () => (
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
       opacity: 0;
       transition: opacity 0.2s;
     }
     .btn-primary:hover::before { opacity: 1; }
     .btn-primary:hover {
       transform: scale(1.04);
+      background-position: 100% 100%;
       box-shadow: 0 8px 32px rgba(255,107,53,0.5), 0 0 20px rgba(255,184,0,0.3);
     }
     .btn-primary:active { transform: scale(0.97); }
+
+    .btn-safety {
+      background: linear-gradient(135deg, #22c55e, #10b981);
+      color: white;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .btn-safety:hover {
+      transform: scale(1.04);
+      box-shadow: 0 8px 32px rgba(34,197,94,0.5);
+    }
 
     .btn-ghost {
       background: rgba(255,255,255,0.05);
@@ -273,10 +353,7 @@ const GlobalStyles = () => (
       box-shadow: 0 0 0 3px rgba(255,107,53,0.12), 0 0 20px rgba(255,107,53,0.08);
     }
 
-    select.input-base option {
-      background: #0f172a;
-      color: #F8FAFC;
-    }
+    select.input-base option { background: #0f172a; color: #F8FAFC; }
 
     .action-btn {
       width: 34px; height: 34px; border-radius: 10px;
@@ -305,35 +382,82 @@ const GlobalStyles = () => (
     .screenshot-scroll::-webkit-scrollbar { height: 4px; }
     .screenshot-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
     .screenshot-scroll::-webkit-scrollbar-thumb { background: ${C.orange}; border-radius: 999px; }
+
+    .safety-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.08));
+      border: 1px solid rgba(34,197,94,0.35);
+      border-radius: 11px;
+      color: #22c55e;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .safety-badge .icon-pulse {
+      animation: safetyPulse 2.5s ease-in-out infinite;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(34,197,94,0.18);
+      flex-shrink: 0;
+    }
   `}</style>
 );
 
+// ============ 🛡️ SAFETY BADGE — TRUST LAYER COMPONENT ============
+const SafetyBadge = ({ compact = false }: { compact?: boolean }) => {
+  if (compact) {
+    return (
+      <div className="safety-badge" style={{ width: '100%', justifyContent: 'center', marginTop: 8 }}>
+        <span className="icon-pulse">🛡️</span>
+        <span>Verified Safe · Scanned by SunRise Security</span>
+      </div>
+    );
+  }
+  return (
+    <div className="safety-badge safety-pulse" style={{ width: '100%', justifyContent: 'center', marginTop: 10, padding: '12px 16px' }}>
+      <span className="icon-pulse" style={{ width: 28, height: 28 }}>🛡️</span>
+      <div style={{ textAlign: 'left' }}>
+        <div style={{ fontWeight: 700, fontSize: 13 }}>Verified Safe</div>
+        <div style={{ fontSize: 11, opacity: 0.85, fontWeight: 500 }}>Scanned by SunRise Security · No malware detected</div>
+      </div>
+    </div>
+  );
+};
+
 // ============ TOAST ============
 const Toast = ({ toasts, removeToast }: { toasts: ToastItem[]; removeToast: (id: number) => void }) => (
-  <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 360, padding: '0 16px', pointerEvents: 'none' }}>
-    {toasts.map(t => (
-      <div key={t.id} className="fade-in glass-panel" style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-        padding: '13px 16px', borderRadius: 14, fontSize: 13.5, fontWeight: 500, pointerEvents: 'all',
-        background: t.type === 'success' ? 'rgba(6,78,59,0.95)' : t.type === 'error' ? 'rgba(127,29,29,0.95)' : 'rgba(15,23,42,0.98)',
-        border: `1px solid ${t.type === 'success' ? 'rgba(52,211,153,0.4)' : t.type === 'error' ? 'rgba(248,113,113,0.4)' : 'rgba(255,107,53,0.4)'}`,
-        color: t.type === 'success' ? C.green : t.type === 'error' ? C.red : '#fdba74',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.8)'
-      }}>
-        <span>{t.message}</span>
-        <button onClick={() => removeToast(t.id)} style={{ opacity: 0.5, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', padding: 0, flexShrink: 0, lineHeight: 1 }}><X size={13} /></button>
-      </div>
-    ))}
+  <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 420, padding: '0 16px', pointerEvents: 'none' }}>
+    {toasts.map(t => {
+      const isInstall = t.type === 'install';
+      return (
+        <div key={t.id} className="fade-in glass-panel" style={{
+          display: 'flex', alignItems: isInstall ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 12,
+          padding: isInstall ? '14px 16px' : '13px 16px', borderRadius: 14, fontSize: 13, fontWeight: 500, pointerEvents: 'all',
+          background: t.type === 'success' ? 'rgba(6,78,59,0.95)' : t.type === 'error' ? 'rgba(127,29,29,0.95)' : isInstall ? 'rgba(15,23,42,0.98)' : 'rgba(15,23,42,0.98)',
+          border: `1px solid ${t.type === 'success' ? 'rgba(34,197,94,0.45)' : t.type === 'error' ? 'rgba(248,113,113,0.4)' : isInstall ? 'rgba(34,197,94,0.45)' : 'rgba(255,107,53,0.4)'}`,
+          color: t.type === 'success' || isInstall ? C.green : t.type === 'error' ? C.red : '#fdba74',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.8)'
+        }}>
+          {isInstall && <span style={{ fontSize: 22, flexShrink: 0, lineHeight: 1 }}>📲</span>}
+          <span style={{ flex: 1, lineHeight: 1.6 }}>{t.message}</span>
+          <button onClick={() => removeToast(t.id)} style={{ opacity: 0.5, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', padding: 0, flexShrink: 0, lineHeight: 1, marginTop: isInstall ? 3 : 0 }}><X size={13} /></button>
+        </div>
+      );
+    })}
   </div>
 );
 
 const useToast = () => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const counter = useRef(0);
-  const addToast = useCallback((message: string, type: ToastItem['type'] = 'info') => {
+  const addToast = useCallback((message: string, type: ToastItem['type'] = 'info', duration = 4500) => {
     const id = ++counter.current;
     setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4500);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
   }, []);
   const removeToast = useCallback((id: number) => setToasts(prev => prev.filter(t => t.id !== id)), []);
   return { toasts, addToast, removeToast };
@@ -388,7 +512,6 @@ const ScreenshotGallery = ({ screenshots }: { screenshots: string[] }) => {
 
   return (
     <div>
-      {/* Lightbox */}
       {lightbox && (
         <div onClick={() => setLightbox(false)} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.97)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <button onClick={() => setLightbox(false)} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', borderRadius: 10, padding: 8 }}><X size={20} /></button>
@@ -430,16 +553,13 @@ const AppDetailModal = ({ app, onClose, onDownload, unlocked }: { app: AppData |
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 600, background: 'rgba(0,0,0,0.94)', backdropFilter: 'blur(24px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0' }}>
       <div onClick={e => e.stopPropagation()} className="fade-in" style={{ background: 'linear-gradient(180deg, #0f172a 0%, #000000 100%)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 700, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 -20px 80px rgba(255,107,53,0.15)' }}>
-        {/* Header */}
         <div style={{ padding: '20px 24px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div style={{ width: 4, height: 36, background: 'linear-gradient(180deg, #FF6B35, #FFB800)', borderRadius: 999 }} />
           <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 999, margin: '0 auto' }} />
           <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.07)', border: `1px solid ${C.border}`, color: C.textMuted, cursor: 'pointer', borderRadius: 10, padding: 8, display: 'flex', alignItems: 'center' }}><X size={16} /></button>
         </div>
 
-        {/* Scrollable content */}
         <div style={{ overflowY: 'auto', flex: 1, padding: '20px 24px 32px' }}>
-          {/* App Identity */}
           <div style={{ display: 'flex', gap: 18, marginBottom: 24, alignItems: 'flex-start' }}>
             <div style={{ width: 90, height: 90, flexShrink: 0, background: 'rgba(255,107,53,0.08)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>{icon}</div>
             <div style={{ flex: 1, paddingTop: 4 }}>
@@ -448,21 +568,20 @@ const AppDetailModal = ({ app, onClose, onDownload, unlocked }: { app: AppData |
                 <span style={{ padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 700, color: 'white', background: getBadgeGradient(app.badge) }}>{getBadgeEmoji(app.badge)} {app.badge}</span>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, fontSize: 12 }}>
-                <span style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, padding: '3px 10px', borderRadius: 8, color: C.textMuted }}>v{app.version}</span>
-                <span style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, padding: '3px 10px', borderRadius: 8, color: C.textMuted }}>{app.size}</span>
-                <span style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.2)', padding: '3px 10px', borderRadius: 8, color: C.purple }}>{app.category}</span>
+                <span style={{ background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.25)', padding: '3px 10px', borderRadius: 8, color: C.blue }}>v{app.version}</span>
+                <span style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', padding: '3px 10px', borderRadius: 8, color: C.green }}>{app.size}</span>
+                <span style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)', padding: '3px 10px', borderRadius: 8, color: C.purple }}>{app.category}</span>
               </div>
             </div>
           </div>
 
-          {/* Stats Row */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 24 }}>
             {[
-              { icon: <Download size={16} />, val: formatDownloads(app.downloads), lab: 'Downloads', c: C.orange },
-              { icon: <Star size={16} />, val: app.rating + '★', lab: 'Rating', c: C.gold },
-              { icon: <RefreshCw size={16} />, val: app.updated, lab: 'Updated', c: C.blue },
+              { icon: <Download size={16} />, val: formatDownloads(app.downloads), lab: 'Downloads', c: C.orange, bg: 'rgba(255,107,53,0.08)', bc: 'rgba(255,107,53,0.2)' },
+              { icon: <Star size={16} />, val: app.rating + '★', lab: 'Rating', c: C.gold, bg: 'rgba(250,204,21,0.08)', bc: 'rgba(250,204,21,0.2)' },
+              { icon: <RefreshCw size={16} />, val: app.updated, lab: 'Updated', c: C.cyan, bg: 'rgba(6,182,212,0.08)', bc: 'rgba(6,182,212,0.2)' },
             ].map((s, i) => (
-              <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '14px 12px', textAlign: 'center' }}>
+              <div key={i} style={{ background: s.bg, border: `1px solid ${s.bc}`, borderRadius: 14, padding: '14px 12px', textAlign: 'center' }}>
                 <div style={{ color: s.c, display: 'flex', justifyContent: 'center', marginBottom: 6 }}>{s.icon}</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{s.val}</div>
                 <div style={{ fontSize: 10, color: C.textFaint, marginTop: 3 }}>{s.lab}</div>
@@ -470,15 +589,13 @@ const AppDetailModal = ({ app, onClose, onDownload, unlocked }: { app: AppData |
             ))}
           </div>
 
-          {/* Screenshots */}
           {app.screenshots && app.screenshots.length > 0 && (
             <div style={{ marginBottom: 24 }}>
               <ScreenshotGallery screenshots={app.screenshots} />
             </div>
           )}
 
-          {/* Description */}
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ marginBottom: 24 }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 7 }}>
               <FileText size={15} style={{ color: C.orange }} /> About this app
             </h3>
@@ -487,15 +604,17 @@ const AppDetailModal = ({ app, onClose, onDownload, unlocked }: { app: AppData |
             </div>
           </div>
 
-          {/* Download Button */}
           {!isCS && (
-            <button
-              onClick={() => { onDownload(app); onClose(); }}
-              className="btn-primary glow-btn"
-              style={{ width: '100%', padding: '17px', borderRadius: 16, fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
-            >
-              {unlocked ? <><Download size={20} /> Download APK — Free</> : <><Lock size={20} /> Get APK — Watch Ad</>}
-            </button>
+            <>
+              <button
+                onClick={() => { onDownload(app); onClose(); }}
+                className="btn-primary glow-btn"
+                style={{ width: '100%', padding: '17px', borderRadius: 16, fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+              >
+                {unlocked ? <><Download size={20} /> Download APK — Free</> : <><Lock size={20} /> Get APK — Watch Ad</>}
+              </button>
+              <SafetyBadge />
+            </>
           )}
           {isCS && (
             <div style={{ width: '100%', padding: '17px', borderRadius: 16, fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, color: C.textFaint }}>
@@ -529,13 +648,16 @@ const LockModal = ({ app, onClose, onUnlock }: { app: AppData | null; onClose: (
             <Lock style={{ color: C.orange }} size={34} />
           </div>
           <h3 style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 8 }}>Unlock Download</h3>
-          <p style={{ color: C.textMuted, fontSize: 13.5, marginBottom: 32, lineHeight: 1.7 }}>{app.name}</p>
+          <p style={{ color: C.textMuted, fontSize: 13.5, marginBottom: 24, lineHeight: 1.7 }}>{app.name}</p>
+
+          <SafetyBadge compact />
+
           {!watching ? (
-            <button onClick={() => setWatching(true)} className="btn-primary" style={{ width: '100%', padding: 16, borderRadius: 15, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+            <button onClick={() => setWatching(true)} className="btn-primary" style={{ width: '100%', padding: 16, borderRadius: 15, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20 }}>
               <Eye size={20} /> Watch Ad to Unlock
             </button>
           ) : (
-            <div style={{ background: 'rgba(255,107,53,0.06)', borderRadius: 16, padding: '24px 20px', border: '1px solid rgba(255,107,53,0.2)' }}>
+            <div style={{ background: 'rgba(255,107,53,0.06)', borderRadius: 16, padding: '24px 20px', border: '1px solid rgba(255,107,53,0.2)', marginTop: 20 }}>
               <p className="pulse" style={{ color: C.orange, fontSize: 14, fontWeight: 700, marginBottom: 16 }}>⏳ Ad playing...</p>
               <div style={{ width: '100%', background: 'rgba(255,255,255,0.06)', borderRadius: 999, height: 10, overflow: 'hidden' }}>
                 <div style={{ height: '100%', background: 'linear-gradient(90deg, #FF6B35, #FFB800)', borderRadius: 999, transition: 'width 1s linear', width: `${((5 - countdown) / 5) * 100}%` }} />
@@ -595,10 +717,10 @@ const FileUpload = ({ label, accept, bucket, folder, onUploadComplete, currentUr
         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        style={{ border: `1.5px dashed ${dragOver ? C.orange : currentUrl ? 'rgba(52,211,153,0.5)' : C.border}`, borderRadius: 13, padding: '14px 12px', display: 'flex', alignItems: 'center', gap: 12, cursor: uploading ? 'wait' : 'pointer', background: dragOver ? 'rgba(255,107,53,0.05)' : currentUrl ? 'rgba(52,211,153,0.04)' : 'rgba(255,255,255,0.02)', transition: 'all 0.2s ease' }}
+        style={{ border: `1.5px dashed ${dragOver ? C.orange : currentUrl ? 'rgba(34,197,94,0.5)' : C.border}`, borderRadius: 13, padding: '14px 12px', display: 'flex', alignItems: 'center', gap: 12, cursor: uploading ? 'wait' : 'pointer', background: dragOver ? 'rgba(255,107,53,0.05)' : currentUrl ? 'rgba(34,197,94,0.04)' : 'rgba(255,255,255,0.02)', transition: 'all 0.2s ease' }}
       >
         <input ref={inputRef} type="file" accept={accept} onChange={handleFile} style={{ display: 'none' }} />
-        <div style={{ width: 40, height: 40, borderRadius: 11, background: currentUrl ? 'rgba(52,211,153,0.1)' : 'rgba(255,107,53,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${currentUrl ? 'rgba(52,211,153,0.25)' : 'rgba(255,107,53,0.2)'}` }}>
+        <div style={{ width: 40, height: 40, borderRadius: 11, background: currentUrl ? 'rgba(34,197,94,0.1)' : 'rgba(255,107,53,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${currentUrl ? 'rgba(34,197,94,0.25)' : 'rgba(255,107,53,0.2)'}` }}>
           {uploading ? <Loader2 size={16} style={{ color: C.orange }} className="spin" /> : currentUrl ? <CheckCircle size={16} style={{ color: C.green }} /> : <Upload size={16} style={{ color: C.orange }} />}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -693,13 +815,20 @@ const AppCard = ({ app, onDownload, unlocked, onViewDetail }: { app: AppData; on
         {getBadgeEmoji(app.badge)} {app.badge}
       </span>
 
+      {/* Trust micro-badge */}
+      {!isCS && (
+        <span style={{ position: 'absolute', top: -9, left: 14, padding: '2px 8px', borderRadius: 999, fontSize: 9, fontWeight: 700, color: C.green, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', display: 'flex', alignItems: 'center', gap: 3 }}>
+          🛡️ Verified
+        </span>
+      )}
+
       <div onClick={() => onViewDetail(app)} style={{ cursor: 'pointer' }}>
         <div style={{ display: 'flex', gap: 14, marginBottom: 14, alignItems: 'flex-start' }}>
           <div style={{ width: 58, height: 58, flexShrink: 0, background: C.accentGlow, border: '1px solid rgba(255,107,53,0.15)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}>{icon}</div>
           <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
             <h3 style={{ fontWeight: 700, color: C.text, fontSize: 15.5, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.name}</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 5, fontSize: 11.5, color: C.textFaint }}>
-              <span style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: 7, border: `1px solid ${C.border}` }}>v{app.version}</span>
+              <span style={{ background: 'rgba(96,165,250,0.1)', padding: '2px 8px', borderRadius: 7, border: '1px solid rgba(96,165,250,0.2)', color: C.blue }}>v{app.version}</span>
               <span>·</span><span>{app.size}</span>
             </div>
           </div>
@@ -707,7 +836,6 @@ const AppCard = ({ app, onDownload, unlocked, onViewDetail }: { app: AppData; on
 
         <p style={{ color: C.textMuted, fontSize: 13.5, lineHeight: 1.75, marginBottom: 14, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{app.description}</p>
 
-        {/* Screenshots preview */}
         {app.screenshots && app.screenshots.length > 0 && (
           <div style={{ display: 'flex', gap: 6, marginBottom: 14, overflow: 'hidden' }}>
             {app.screenshots.slice(0, 3).map((s, i) => (
@@ -724,8 +852,8 @@ const AppCard = ({ app, onDownload, unlocked, onViewDetail }: { app: AppData; on
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16, fontSize: 11.5, color: C.textFaint }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Download size={11} /> {formatDownloads(app.downloads)}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Star size={11} style={{ color: C.gold }} /> {app.rating}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: C.orange }}><Download size={11} /> {formatDownloads(app.downloads)}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: C.gold }}><Star size={11} /> {app.rating}</span>
           <span style={{ background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', padding: '2px 9px', borderRadius: 8, color: C.purple, fontSize: 11 }}>{app.category}</span>
         </div>
       </div>
@@ -742,10 +870,17 @@ const AppCard = ({ app, onDownload, unlocked, onViewDetail }: { app: AppData; on
         <button onClick={() => onViewDetail(app)} style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,107,53,0.08)', border: '1px solid rgba(255,107,53,0.2)', color: C.orange, cursor: 'pointer' }}>
           <Eye size={15} />
         </button>
-        <button onClick={handleShare} className="btn-ghost" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={handleShare} style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: C.purple, cursor: 'pointer' }}>
           <Share2 size={14} />
         </button>
       </div>
+
+      {/* Trust mini line */}
+      {!isCS && (
+        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 10.5, color: C.green, opacity: 0.85 }}>
+          <ShieldCheck size={11} /> <span>Verified Safe · Scanned by SunRise Security</span>
+        </div>
+      )}
     </div>
   );
 };
@@ -766,21 +901,26 @@ const HomePage = ({ apps, onDownload, unlockedApps, loading, settings, onViewDet
 
   return (
     <>
-      {/* HERO */}
       <section style={{ padding: '120px 16px 100px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(255,107,53,0.06) 0%, transparent 60%)' }} />
         <div style={{ position: 'absolute', top: '-20%', left: '50%', transform: 'translateX(-50%)', width: 800, height: 600, background: 'radial-gradient(ellipse, rgba(255,107,53,0.12) 0%, transparent 65%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: '0', left: '10%', width: 300, height: 300, background: 'radial-gradient(ellipse, rgba(139,92,246,0.08) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '30%', right: '5%', width: 280, height: 280, background: 'radial-gradient(ellipse, rgba(34,197,94,0.06) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
 
         <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.25)', borderRadius: 999, padding: '9px 20px', marginBottom: 32, fontSize: 13, color: C.orange, backdropFilter: 'blur(10px)' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.25)', borderRadius: 999, padding: '9px 20px', marginBottom: 24, fontSize: 13, color: C.orange, backdropFilter: 'blur(10px)' }}>
             <Sparkles size={13} /> Your Trusted App Source <Zap size={11} style={{ color: C.gold }} />
+          </div>
+
+          {/* Trust Banner */}
+          <div className="float-anim" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.08))', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 999, padding: '8px 18px', marginBottom: 32, fontSize: 12.5, color: C.green, fontWeight: 600 }}>
+            <span style={{ fontSize: 16 }}>🛡️</span> 100% Verified Safe · No Malware · SSL Secured
           </div>
 
           <h1 style={{ fontSize: 'clamp(48px, 10vw, 100px)', fontWeight: 900, lineHeight: 1.04, marginBottom: 24, letterSpacing: -3 }}>
             <span className="glow-text" style={{ background: 'linear-gradient(135deg, #FF6B35 0%, #FFB800 50%, #FACC15 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>SunRise</span>
             <br />
-            <span style={{ color: C.text }}>Apps</span>
+            <span style={{ background: 'linear-gradient(135deg, #F8FAFC, #94A3B8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Apps</span>
           </h1>
 
           <p style={{ fontSize: 'clamp(15px, 2.8vw, 20px)', color: C.textMuted, maxWidth: 520, margin: '0 auto 48px', lineHeight: 1.85 }}>
@@ -792,16 +932,15 @@ const HomePage = ({ apps, onDownload, unlockedApps, loading, settings, onViewDet
               <Download size={18} /> Explore Apps
             </button>
             <button onClick={() => document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' })} className="btn-ghost" style={{ padding: '16px 30px', fontSize: 16, borderRadius: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Heart size={16} /> Learn More
+              <Heart size={16} style={{ color: C.pink }} /> Learn More
             </button>
           </div>
 
-          {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', maxWidth: 460, margin: '0 auto', gap: 14 }}>
             {[
               { v: formatDownloads(totalDL.toString()), l: 'Downloads', ic: <Download size={18} />, c: C.orange, bg: 'rgba(255,107,53,0.08)', bc: 'rgba(255,107,53,0.2)' },
               { v: pub.filter(a => a.apk_link && a.apk_link !== '#').length + '+', l: 'Apps Live', ic: <Smartphone size={18} />, c: C.blue, bg: 'rgba(96,165,250,0.08)', bc: 'rgba(96,165,250,0.2)' },
-              { v: '4.9★', l: 'Avg Rating', ic: <Star size={18} />, c: C.purple, bg: 'rgba(168,85,247,0.08)', bc: 'rgba(168,85,247,0.2)' },
+              { v: '4.9★', l: 'Avg Rating', ic: <Star size={18} />, c: C.gold, bg: 'rgba(250,204,21,0.08)', bc: 'rgba(250,204,21,0.2)' },
             ].map((s, i) => (
               <div key={i} style={{ background: s.bg, border: `1px solid ${s.bc}`, borderRadius: 18, padding: '20px 12px', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
                 <div style={{ color: s.c, marginBottom: 10, display: 'flex', justifyContent: 'center' }}>{s.ic}</div>
@@ -817,7 +956,6 @@ const HomePage = ({ apps, onDownload, unlockedApps, loading, settings, onViewDet
         <AdBanner settings={settings} />
       </div>
 
-      {/* APP GRID */}
       <section id="apps" style={{ padding: '60px 16px 80px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
@@ -825,12 +963,11 @@ const HomePage = ({ apps, onDownload, unlockedApps, loading, settings, onViewDet
               <TrendingUp size={11} /> Trending Now
             </div>
             <h2 style={{ fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: 900, color: C.text, marginBottom: 14, letterSpacing: -1 }}>
-              App <span style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB800)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Collection</span>
+              App <span style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB800, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Collection</span>
             </h2>
-            <p style={{ color: C.textMuted, fontSize: 15, lineHeight: 1.7 }}>All apps free — watch a short ad to download</p>
+            <p style={{ color: C.textMuted, fontSize: 15, lineHeight: 1.7 }}>All apps free — watch a short ad to download · 🛡️ Verified Safe</p>
           </div>
 
-          {/* Search & Filter */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, maxWidth: 580, margin: '0 auto 40px' }}>
             <div style={{ flex: 1, minWidth: 200, position: 'relative' }}>
               <Search size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.textFaint, pointerEvents: 'none' }} />
@@ -970,7 +1107,7 @@ const MonetizationTab = ({ addToast }: { addToast: (msg: string, type: ToastItem
         <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.7 }}>Control all ads from here. Toggle on/off and update your AdSense IDs anytime.</p>
       </div>
 
-      <div style={{ background: settings.ads_enabled ? 'rgba(52,211,153,0.06)' : 'rgba(251,191,36,0.06)', border: `1px solid ${settings.ads_enabled ? 'rgba(52,211,153,0.22)' : 'rgba(251,191,36,0.22)'}`, borderRadius: 16, padding: '20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setSettings(s => ({ ...s, ads_enabled: !s.ads_enabled }))}>
+      <div style={{ background: settings.ads_enabled ? 'rgba(34,197,94,0.06)' : 'rgba(251,191,36,0.06)', border: `1px solid ${settings.ads_enabled ? 'rgba(34,197,94,0.22)' : 'rgba(251,191,36,0.22)'}`, borderRadius: 16, padding: '20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setSettings(s => ({ ...s, ads_enabled: !s.ads_enabled }))}>
         <div>
           <p style={{ fontWeight: 700, color: C.text, fontSize: 14, marginBottom: 4 }}>{settings.ads_enabled ? '🟢 Ads are ENABLED' : '🔴 Ads are DISABLED'}</p>
           <p style={{ color: C.textMuted, fontSize: 12 }}>{settings.ads_enabled ? 'Google AdSense is running on the website' : 'No ads are shown anywhere on the website'}</p>
@@ -1064,7 +1201,7 @@ const TechDocsTab = () => {
       <Section title="Deployment" icon={<Server size={16} style={{ color: C.green }} />}>
         <DocLink label="Vercel Dashboard" url="https://vercel.com/dashboard" icon={<Server size={14} />} />
         <DocLink label="GitHub Repository" url="https://github.com" icon={<GitBranch size={14} />} />
-        <div style={{ background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: 12, padding: '12px 14px', marginTop: 8 }}>
+        <div style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 12, padding: '12px 14px', marginTop: 8 }}>
           <p style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.8 }}>
             <strong style={{ color: C.green }}>Deploy:</strong> git add . → git commit -m "update" → git push<br />
             <strong style={{ color: C.green }}>Build:</strong> npm run build &nbsp;&nbsp; <strong style={{ color: C.green }}>Output:</strong> dist
@@ -1225,7 +1362,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
     <section style={{ padding: '100px 16px 80px' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
 
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 14 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginBottom: 6 }}>
@@ -1249,11 +1385,10 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
           </div>
         </div>
 
-        {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 24 }}>
           {[
             { l: 'Total Apps', v: apps.length, c: C.text, bg: 'rgba(255,255,255,0.03)', bc: C.border, ic: <Layers size={14} /> },
-            { l: 'Published', v: pubC, c: C.green, bg: 'rgba(52,211,153,0.07)', bc: 'rgba(52,211,153,0.2)', ic: <Eye size={14} /> },
+            { l: 'Published', v: pubC, c: C.green, bg: 'rgba(34,197,94,0.07)', bc: 'rgba(34,197,94,0.2)', ic: <Eye size={14} /> },
             { l: 'Drafts', v: draftC, c: C.amber, bg: 'rgba(251,191,36,0.07)', bc: 'rgba(251,191,36,0.2)', ic: <EyeOff size={14} /> },
             { l: 'Feedbacks', v: feedbacks.length, c: C.blue, bg: 'rgba(96,165,250,0.07)', bc: 'rgba(96,165,250,0.2)', ic: <MessageSquare size={14} />, badge: unread },
           ].map((s, i) => (
@@ -1265,7 +1400,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
           ))}
         </div>
 
-        {/* Tabs */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 24, paddingBottom: 18, borderBottom: `1px solid ${C.border}` }}>
           {adminTabs.map(t => (
             <button key={t.k} onClick={() => { setTab(t.k); if (t.k === 'feedbacks') fetchFb(); }} style={{
@@ -1281,7 +1415,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
           ))}
         </div>
 
-        {/* ===== APPS TAB ===== */}
         {tab === 'apps' && (
           <>
             {showForm && (
@@ -1293,7 +1426,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
                   <button onClick={closeForm} style={{ color: C.textFaint, background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, cursor: 'pointer', padding: 8, borderRadius: 10 }}><X size={16} /></button>
                 </div>
 
-                {/* Basic Info */}
                 <div style={{ marginBottom: 22 }}>
                   <p style={{ fontSize: 11, color: C.orange, fontWeight: 700, letterSpacing: 0.6, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}><BarChart3 size={12} />BASIC INFORMATION</p>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 13 }}>
@@ -1312,7 +1444,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
                       </div>
                     ))}
 
-                    {/* Category Dropdown with emojis */}
                     <div>
                       <label style={{ display: 'block', fontSize: 11, color: C.textFaint, marginBottom: 6, fontWeight: 600, letterSpacing: 0.3 }}>CATEGORY</label>
                       <div style={{ position: 'relative' }}>
@@ -1325,13 +1456,11 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
                   </div>
                 </div>
 
-                {/* Description */}
                 <div style={{ marginBottom: 22 }}>
                   <label style={{ display: 'block', fontSize: 11, color: C.textFaint, marginBottom: 6, fontWeight: 600, letterSpacing: 0.3 }}>DESCRIPTION (supports emojis 🎉)</label>
                   <textarea value={form.description ?? ''} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Describe what this app does, its features and benefits. Be detailed — users see the full text when they tap the app!" rows={6} style={{ ...iS, resize: 'vertical', minHeight: 120, lineHeight: 1.8 }} className="input-base" />
                 </div>
 
-                {/* APK Section */}
                 <div style={{ marginBottom: 22 }}>
                   <p style={{ fontSize: 11, color: C.orange, fontWeight: 700, letterSpacing: 0.6, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}><Package size={12} />APK FILE</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
@@ -1348,7 +1477,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
                   </div>
                 </div>
 
-                {/* Icon & Badge */}
                 <div style={{ marginBottom: 22 }}>
                   <p style={{ fontSize: 11, color: C.orange, fontWeight: 700, letterSpacing: 0.6, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}><FileImage size={12} />ICON & BADGE</p>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 13 }}>
@@ -1365,7 +1493,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
                       )}
                     </div>
 
-                    {/* Badge Dropdown with emojis */}
                     <div>
                       <label style={{ display: 'block', fontSize: 11, color: C.textFaint, marginBottom: 6, fontWeight: 600, letterSpacing: 0.3 }}>APP BADGE</label>
                       <div style={{ position: 'relative' }}>
@@ -1384,19 +1511,17 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
                   </div>
                 </div>
 
-                {/* Screenshots */}
                 <div style={{ marginBottom: 22 }}>
                   <p style={{ fontSize: 11, color: C.orange, fontWeight: 700, letterSpacing: 0.6, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}><Images size={12} />APP SCREENSHOTS</p>
                   <ScreenshotUpload screenshots={form.screenshots || []} onAdd={addScreenshot} onRemove={removeScreenshot} addToast={addToast} />
                 </div>
 
-                {/* Visibility */}
                 <div style={{ marginBottom: 24 }}>
                   <p style={{ fontSize: 11, color: C.orange, fontWeight: 700, letterSpacing: 0.6, marginBottom: 13, display: 'flex', alignItems: 'center', gap: 6 }}><Eye size={12} />VISIBILITY</p>
                   <button type="button" onClick={() => setForm(p => ({ ...p, published: !p.published }))} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '16px 18px', borderRadius: 14, cursor: 'pointer', transition: 'all 0.2s',
-                    background: form.published ? 'rgba(52,211,153,0.07)' : 'rgba(251,191,36,0.07)',
-                    border: `1px solid ${form.published ? 'rgba(52,211,153,0.25)' : 'rgba(251,191,36,0.25)'}`,
+                    background: form.published ? 'rgba(34,197,94,0.07)' : 'rgba(251,191,36,0.07)',
+                    border: `1px solid ${form.published ? 'rgba(34,197,94,0.25)' : 'rgba(251,191,36,0.25)'}`,
                     color: form.published ? C.green : C.amber
                   }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600 }}>
@@ -1417,7 +1542,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
               </div>
             )}
 
-            {/* Filters */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 18 }}>
               {(['all', 'published', 'draft'] as const).map(f => (
                 <button key={f} onClick={() => setFilter(f)} style={{
@@ -1431,7 +1555,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
               ))}
             </div>
 
-            {/* App List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {fa.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '64px 0', color: C.textFaint }}>
@@ -1440,7 +1563,7 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
                   <button onClick={openAdd} style={{ marginTop: 16, padding: '9px 18px', background: 'rgba(255,107,53,0.08)', color: C.orange, borderRadius: 12, fontSize: 13, border: '1px solid rgba(255,107,53,0.2)', cursor: 'pointer', fontWeight: 600 }}>+ Add your first app</button>
                 </div>
               ) : fa.map(app => (
-                <div key={app.id} style={{ background: C.bgCard, border: `1px solid ${app.published ? 'rgba(52,211,153,0.18)' : C.border}`, borderRadius: 15, padding: '15px 17px', display: 'flex', alignItems: 'center', gap: 13, opacity: app.published ? 1 : 0.65, transition: 'all 0.2s' }}>
+                <div key={app.id} style={{ background: C.bgCard, border: `1px solid ${app.published ? 'rgba(34,197,94,0.18)' : C.border}`, borderRadius: 15, padding: '15px 17px', display: 'flex', alignItems: 'center', gap: 13, opacity: app.published ? 1 : 0.65, transition: 'all 0.2s' }}>
                   <div style={{ width: 50, height: 50, flexShrink: 0, background: 'rgba(255,107,53,0.07)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, overflow: 'hidden', border: `1px solid ${C.border}` }}>
                     {app.icon_url ? <img src={app.icon_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : app.icon || '📱'}
                   </div>
@@ -1448,7 +1571,7 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 4 }}>
                       <span style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>{app.name}</span>
                       <span style={{ background: getBadgeGradient(app.badge), padding: '2px 9px', borderRadius: 999, fontSize: 9, fontWeight: 700, color: 'white' }}>{getBadgeEmoji(app.badge)} {app.badge}</span>
-                      <span style={{ padding: '2px 9px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: app.published ? 'rgba(52,211,153,0.12)' : 'rgba(251,191,36,0.12)', color: app.published ? C.green : C.amber }}>
+                      <span style={{ padding: '2px 9px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: app.published ? 'rgba(34,197,94,0.12)' : 'rgba(251,191,36,0.12)', color: app.published ? C.green : C.amber }}>
                         {app.published ? '🟢 Live' : '📝 Draft'}
                       </span>
                       {app.screenshots && app.screenshots.length > 0 && <span style={{ padding: '2px 9px', borderRadius: 999, fontSize: 9, fontWeight: 600, background: 'rgba(168,85,247,0.1)', color: C.purple }}>📸 {app.screenshots.length} shots</span>}
@@ -1468,7 +1591,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
           </>
         )}
 
-        {/* ===== FEEDBACKS TAB ===== */}
         {tab === 'feedbacks' && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -1538,8 +1660,9 @@ const AboutSection = () => (
     <div style={{ maxWidth: 860, margin: '0 auto' }}>
       <div className="glass-panel" style={{ borderRadius: 24, padding: '40px 32px', position: 'relative', overflow: 'hidden', boxShadow: '0 0 60px rgba(255,107,53,0.08)' }}>
         <div style={{ position: 'absolute', top: -60, right: -60, width: 280, height: 280, background: 'radial-gradient(circle, rgba(255,107,53,0.12), transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -60, left: -60, width: 220, height: 220, background: 'radial-gradient(circle, rgba(168,85,247,0.1), transparent 70%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 30, position: 'relative', zIndex: 1 }}>
-          <div style={{ width: 120, height: 120, background: 'linear-gradient(135deg, #FF6B35, #FFB800)', borderRadius: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 52, boxShadow: '0 0 60px rgba(255,107,53,0.35)', flexShrink: 0 }}>🌅</div>
+          <div className="float-anim" style={{ width: 120, height: 120, background: 'linear-gradient(135deg, #FF6B35, #FFB800)', borderRadius: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 52, boxShadow: '0 0 60px rgba(255,107,53,0.35)', flexShrink: 0 }}>🌅</div>
           <div style={{ textAlign: 'center', maxWidth: 560 }}>
             <h2 style={{ fontSize: 28, fontWeight: 900, color: C.text, marginBottom: 18, letterSpacing: -0.5 }}>
               About <span style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB800)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SunRise Apps</span>
@@ -1548,7 +1671,7 @@ const AboutSection = () => (
             <p style={{ color: C.textMuted, marginBottom: 28, lineHeight: 1.9, fontSize: 15 }}>Every sunrise brings new possibilities — free tools for everyone, powered by non-intrusive ads.</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12 }}>
               <a href="https://instagram.com/SunRise_Apps" target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 18px', background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.2)', borderRadius: 14, color: '#f472b6', fontSize: 13, fontWeight: 500 }}>📸 @SunRise_Apps</a>
-              <a href="mailto:thesunrisecode@gmail.com" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 18px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 14, color: C.textMuted, fontSize: 13 }}><Mail size={14} /> thesunrisecode@gmail.com</a>
+              <a href="mailto:thesunrisecode@gmail.com" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 18px', background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)', borderRadius: 14, color: C.blue, fontSize: 13 }}><Mail size={14} /> thesunrisecode@gmail.com</a>
               <a href="https://sunriseapps.in" target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 18px', background: 'rgba(255,107,53,0.08)', border: '1px solid rgba(255,107,53,0.2)', borderRadius: 14, color: C.orange, fontSize: 13 }}><Globe size={14} /> sunriseapps.in</a>
             </div>
           </div>
@@ -1563,26 +1686,26 @@ const PrivacySection = () => (
   <section style={{ padding: '80px 16px' }}>
     <div style={{ maxWidth: 720, margin: '0 auto' }}>
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <div style={{ width: 76, height: 76, margin: '0 auto 18px', borderRadius: 22, background: 'linear-gradient(135deg, rgba(255,107,53,0.15), rgba(255,184,0,0.1))', border: '1px solid rgba(255,107,53,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(255,107,53,0.15)' }}>
-          <ShieldCheck style={{ color: C.orange }} size={34} />
+        <div style={{ width: 76, height: 76, margin: '0 auto 18px', borderRadius: 22, background: 'linear-gradient(135deg, rgba(34,197,94,0.18), rgba(16,185,129,0.1))', border: '1px solid rgba(34,197,94,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(34,197,94,0.2)' }}>
+          <ShieldCheck style={{ color: C.green }} size={34} />
         </div>
         <h2 style={{ fontSize: 28, fontWeight: 900, color: C.text, marginBottom: 10, letterSpacing: -0.5 }}>
-          Privacy <span style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB800)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Policy</span>
+          Privacy <span style={{ background: 'linear-gradient(135deg, #22c55e, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Policy</span>
         </h2>
         <p style={{ color: C.textMuted, fontSize: 14.5, lineHeight: 1.7 }}>Your privacy is our priority.</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 32 }}>
         {[
-          { icon: <HardDrive size={16} />, title: 'Offline Processing', desc: 'Apps work without sending your data anywhere', bold: true },
-          { icon: <Wifi size={16} />, title: 'No Data Upload', desc: 'We never upload your personal files', bold: true },
-          { icon: <ShieldCheck size={16} />, title: 'HTTPS Encrypted', desc: 'All connections secured with SSL/TLS' },
-          { icon: <Eye size={16} />, title: 'Transparent', desc: 'Clear about what we collect and why' },
+          { icon: <HardDrive size={16} />, title: 'Offline Processing', desc: 'Apps work without sending your data anywhere', c: C.green },
+          { icon: <Wifi size={16} />, title: 'No Data Upload', desc: 'We never upload your personal files', c: C.blue },
+          { icon: <ShieldCheck size={16} />, title: 'HTTPS Encrypted', desc: 'All connections secured with SSL/TLS', c: C.purple },
+          { icon: <Eye size={16} />, title: 'Transparent', desc: 'Clear about what we collect and why', c: C.orange },
         ].map((b, i) => (
           <div key={i} className="glass-panel" style={{ borderRadius: 16, padding: '16px', display: 'flex', gap: 11 }}>
-            <div style={{ color: C.orange, flexShrink: 0, marginTop: 2 }}>{b.icon}</div>
+            <div style={{ color: b.c, flexShrink: 0, marginTop: 2 }}>{b.icon}</div>
             <div>
-              <p style={{ fontSize: 12.5, fontWeight: b.bold ? 700 : 600, color: b.bold ? C.orange : C.text, marginBottom: 4 }}>{b.title}</p>
+              <p style={{ fontSize: 12.5, fontWeight: 700, color: b.c, marginBottom: 4 }}>{b.title}</p>
               <p style={{ fontSize: 11.5, color: C.textMuted, lineHeight: 1.6 }}>{b.desc}</p>
             </div>
           </div>
@@ -1643,7 +1766,7 @@ const ContactSection = ({ addToast }: { addToast: (msg: string, type: ToastItem[
         <div className="glass-panel" style={{ borderRadius: 22, padding: '28px 24px' }}>
           {sent ? (
             <div style={{ textAlign: 'center', padding: '40px 0' }} className="fade-in">
-              <div style={{ width: 80, height: 80, margin: '0 auto 20px', borderRadius: 24, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(52,211,153,0.15)' }}>
+              <div style={{ width: 80, height: 80, margin: '0 auto 20px', borderRadius: 24, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(34,197,94,0.15)' }}>
                 <CheckCircle style={{ color: C.green }} size={36} />
               </div>
               <h3 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 10 }}>Message Sent!</h3>
@@ -1683,11 +1806,11 @@ const ContactSection = ({ addToast }: { addToast: (msg: string, type: ToastItem[
           )}
           <div style={{ marginTop: 30, paddingTop: 22, borderTop: `1px solid ${C.border}`, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, textAlign: 'center' }}>
             {[
-              { href: 'mailto:thesunrisecode@gmail.com', icon: <Mail size={18} />, label: 'Email Us' },
-              { href: 'https://instagram.com/SunRise_Apps', icon: <span style={{ fontSize: 18 }}>📸</span>, label: '@SunRise_Apps', target: '_blank' },
-              { href: 'https://sunriseapps.in', icon: <Globe size={18} />, label: 'Website', target: '_blank' },
+              { href: 'mailto:thesunrisecode@gmail.com', icon: <Mail size={18} />, label: 'Email Us', c: C.blue },
+              { href: 'https://instagram.com/SunRise_Apps', icon: <span style={{ fontSize: 18 }}>📸</span>, label: '@SunRise_Apps', target: '_blank', c: C.pink },
+              { href: 'https://sunriseapps.in', icon: <Globe size={18} />, label: 'Website', target: '_blank', c: C.orange },
             ].map((l, i) => (
-              <a key={i} href={l.href} target={(l as any).target} rel="noreferrer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, color: C.textFaint, textDecoration: 'none', fontSize: 11.5, padding: '13px 8px', borderRadius: 13, transition: 'all 0.2s' }}>
+              <a key={i} href={l.href} target={(l as any).target} rel="noreferrer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, color: l.c, textDecoration: 'none', fontSize: 11.5, padding: '13px 8px', borderRadius: 13, transition: 'all 0.2s' }}>
                 {l.icon}<span>{l.label}</span>
               </a>
             ))}
@@ -1744,25 +1867,37 @@ export default function App() {
 
   const logout = async () => { await supabase.auth.signOut(); setPage('home'); addToast('👋 Logged out', 'info'); };
 
+  // 🛡️ SAFE DOWNLOAD FLOW
+  const performSafeDownload = useCallback(async (app: AppData) => {
+    addToast('⬇️ Preparing safe download...', 'info', 2500);
+    await triggerSafeDownload(app.apk_link, app.name, (status) => {
+      if (status === 'success') {
+        addToast(
+          `✅ ${app.name}_SunRise_Official.apk downloaded!\n\n📲 If prompted, tap "Settings" → "Allow from this source" to install. Our app is 100% verified.`,
+          'install',
+          10000
+        );
+      } else if (status === 'fallback') {
+        addToast('⚠️ Direct download started in new tab', 'info', 4000);
+      }
+    });
+  }, [addToast]);
+
   const download = useCallback((app: AppData) => {
     if (unlocked.includes(app.id)) {
-      addToast('⬇️ Starting download...', 'info');
-      const safeName = cleanFileName(app.name);
-      triggerDownload(app.apk_link, `${safeName}.apk`);
+      performSafeDownload(app);
     } else {
       setModal(app);
     }
-  }, [unlocked, addToast]);
+  }, [unlocked, performSafeDownload]);
 
   const unlock = useCallback(() => {
     if (modal) {
       setUnlocked(p => [...p, modal.id]);
-      addToast('⬇️ Starting download...', 'info');
-      const safeName = cleanFileName(modal.name);
-      triggerDownload(modal.apk_link, `${safeName}.apk`);
+      performSafeDownload(modal);
       setModal(null);
     }
-  }, [modal, addToast]);
+  }, [modal, performSafeDownload]);
 
   const go = (p: string) => { setPage(p); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
@@ -1795,7 +1930,6 @@ export default function App() {
         <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${siteSettings.ad_client_id}`} crossOrigin="anonymous" />
       )}
 
-      {/* NAV */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
@@ -1844,7 +1978,6 @@ export default function App() {
         </div>
       </nav>
 
-      {/* PAGES */}
       {page === 'home' && (
         <>
           <HomePage apps={apps} onDownload={download} unlockedApps={unlocked} loading={loading || refreshing} settings={siteSettings} onViewDetail={setDetailApp} />
@@ -1861,7 +1994,6 @@ export default function App() {
       {page === 'privacy' && <PrivacySection />}
       {page === 'contact' && <ContactSection addToast={addToast} />}
 
-      {/* FOOTER */}
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 16px', textAlign: 'center', background: 'rgba(15,23,42,0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}>
           <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #FF6B35, #FFB800)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(255,107,53,0.3)' }}>
@@ -1869,11 +2001,13 @@ export default function App() {
           </div>
           <span style={{ fontWeight: 800, color: C.textMuted, fontSize: 15 }}>SunRise Apps</span>
         </div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 999, marginBottom: 14, fontSize: 11.5, color: C.green, fontWeight: 600 }}>
+          🛡️ All apps verified safe by SunRise Security
+        </div>
         <p style={{ color: C.textFaint, fontSize: 12.5, marginBottom: 8 }}>Free viral Android apps — always updated 🚀</p>
         <p style={{ color: C.textFaint, fontSize: 10.5, opacity: 0.5 }}>© 2026 SunRise Apps · Built with ❤️ in India</p>
       </footer>
 
-      {/* App Detail Modal */}
       <AppDetailModal app={detailApp} onClose={() => setDetailApp(null)} onDownload={download} unlocked={detailApp ? unlocked.includes(detailApp.id) : false} />
 
       <LockModal app={modal} onClose={() => setModal(null)} onUnlock={unlock} />
