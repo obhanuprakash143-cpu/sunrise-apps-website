@@ -61,28 +61,45 @@ interface SiteSettings {
   updated_at?: string;
 }
 
-// ============ ELITE COLORFUL SYSTEM ============
+// ============ PSYCHOLOGY-DRIVEN PROFESSIONAL COLOR SYSTEM ============
+// Orange = Energy, Action, Enthusiasm (CTAs & brand)
+// Deep Navy = Authority, Trust, Stability (backgrounds)
+// Emerald = Safety, Success, Growth (trust signals)
+// Violet = Innovation, Premium, Creativity
 const C = {
-  bg: '#000000',
-  bgCard: '#0f172a',
-  bgCardHover: '#1e293b',
-  border: '#334155',
-  borderHover: '#FF6B35',
+  // Backgrounds — deep, immersive, professional
+  bg: '#04050a',
+  bgCard: '#0b1120',
+  bgCardHover: '#111827',
+  bgElevated: '#141e2e',
+
+  // Borders
+  border: 'rgba(255,255,255,0.08)',
+  borderMid: 'rgba(255,255,255,0.12)',
+  borderHover: 'rgba(255,107,53,0.4)',
+
+  // Brand — warm sunrise palette
   orange: '#FF6B35',
+  amber: '#FFB800',
   gold: '#FACC15',
-  text: '#F8FAFC',
-  textMuted: '#94A3B8',
-  textFaint: '#475569',
-  accentGlow: 'rgba(255,107,53,0.15)',
-  green: '#22c55e',           // SAFETY GREEN
-  greenGlow: 'rgba(34,197,94,0.15)',
-  amber: '#fbbf24',
-  blue: '#60a5fa',
-  red: '#f87171',
-  purple: '#a855f7',
-  pink: '#ec4899',
-  cyan: '#06b6d4',
-  emerald: '#10b981',
+
+  // Text — clean hierarchy
+  text: '#F0F4FF',
+  textMuted: '#8A9AB8',
+  textFaint: '#4A5674',
+
+  // Glow
+  accentGlow: 'rgba(255,107,53,0.18)',
+
+  // Semantic
+  green: '#10D981',        // Emerald — safety, success
+  greenGlow: 'rgba(16,217,129,0.15)',
+  blue: '#60A5FA',         // Sky — info, version
+  red: '#F87171',          // Coral — danger
+  purple: '#A78BFA',       // Violet — premium
+  pink: '#F472B6',         // Pink — social
+  cyan: '#22D3EE',         // Cyan — updated
+  emerald: '#059669',      // Deep green
 };
 
 // ============ CATEGORIES ============
@@ -197,21 +214,22 @@ const triggerSafeDownload = async (
   }
 };
 
-// ============ GLOBAL STYLES — COLORFUL ELITE ============
+// ============ GLOBAL STYLES — PREMIUM PROFESSIONAL ============
 const GlobalStyles = () => (
   <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
       background: ${C.bg};
       color: ${C.text};
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
       background-image:
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255,107,53,0.08), transparent),
-        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(168,85,247,0.06), transparent),
-        radial-gradient(ellipse 60% 40% at 20% 60%, rgba(34,197,94,0.04), transparent);
+        radial-gradient(ellipse 90% 55% at 50% -15%, rgba(255,107,53,0.07), transparent),
+        radial-gradient(ellipse 70% 45% at 85% 90%, rgba(167,139,250,0.05), transparent),
+        radial-gradient(ellipse 60% 40% at 15% 70%, rgba(16,217,129,0.04), transparent);
     }
     input, textarea, select, button { font-family: inherit; }
     input::placeholder, textarea::placeholder { color: ${C.textFaint}; }
@@ -219,28 +237,20 @@ const GlobalStyles = () => (
 
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: ${C.bg}; }
-    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #FF6B35, #a855f7); border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: ${C.orange}; }
-    ::selection { background: rgba(255,107,53,0.3); color: white; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #FF6B35, #A78BFA); border-radius: 10px; }
+    ::selection { background: rgba(255,107,53,0.28); color: white; }
 
     @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes fadeInScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+    @keyframes fadeInScale { from { opacity:0; transform:scale(0.93); } to { opacity:1; transform:scale(1); } }
     @keyframes spin { to { transform:rotate(360deg); } }
     @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
-    @keyframes slideDown { from{opacity:0;transform:translateY(-12px);} to{opacity:1;transform:translateY(0);} }
-    @keyframes slideUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
-    @keyframes glow { 0%,100%{text-shadow:0 0 20px rgba(255,107,53,0.5);} 50%{text-shadow:0 0 60px rgba(255,184,0,0.8), 0 0 100px rgba(255,107,53,0.5);} }
+    @keyframes slideDown { from{opacity:0;transform:translateY(-14px);} to{opacity:1;transform:translateY(0);} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(22px);} to{opacity:1;transform:translateY(0);} }
+    @keyframes glow { 0%,100%{text-shadow:0 0 24px rgba(255,107,53,0.45);} 50%{text-shadow:0 0 70px rgba(255,184,0,0.9), 0 0 120px rgba(255,107,53,0.5);} }
     @keyframes shimmer { 0%{background-position:-200% 0;} 100%{background-position:200% 0;} }
-    @keyframes glowPulse { 0%,100%{box-shadow: 0 0 20px rgba(255,107,53,0.3);} 50%{box-shadow: 0 0 40px rgba(255,107,53,0.6), 0 0 60px rgba(255,184,0,0.3);} }
-    @keyframes safetyPulse { 0%,100%{box-shadow: 0 0 12px rgba(34,197,94,0.3);} 50%{box-shadow: 0 0 24px rgba(34,197,94,0.6);} }
-    @keyframes rainbowBorder {
-      0%   { border-color: #FF6B35; }
-      25%  { border-color: #FACC15; }
-      50%  { border-color: #22c55e; }
-      75%  { border-color: #06b6d4; }
-      100% { border-color: #FF6B35; }
-    }
-    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    @keyframes glowPulse { 0%,100%{box-shadow: 0 0 22px rgba(255,107,53,0.3), 0 4px 20px rgba(0,0,0,0.5);} 50%{box-shadow: 0 0 55px rgba(255,107,53,0.65), 0 0 80px rgba(255,184,0,0.2), 0 4px 20px rgba(0,0,0,0.5);} }
+    @keyframes safetyPulse { 0%,100%{box-shadow: 0 0 10px rgba(16,217,129,0.25);} 50%{box-shadow: 0 0 28px rgba(16,217,129,0.6);} }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
     .spin { animation: spin 1s linear infinite; }
     .pulse { animation: pulse 2s ease-in-out infinite; }
@@ -254,12 +264,10 @@ const GlobalStyles = () => (
     .float-anim { animation: float 3s ease-in-out infinite; }
 
     .card {
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(145deg, rgba(11,17,32,0.97) 0%, rgba(8,12,20,0.99) 100%);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 22px;
+      transition: all 0.38s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       overflow: hidden;
     }
@@ -267,48 +275,60 @@ const GlobalStyles = () => (
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, ${C.orange}, ${C.gold}, ${C.purple}, transparent);
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,107,53,0.7) 35%, rgba(255,184,0,0.7) 65%, transparent 100%);
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: opacity 0.35s ease;
+    }
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 22px;
+      background: radial-gradient(ellipse 65% 45% at 50% 0%, rgba(255,107,53,0.07) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
     }
     .card:hover {
-      transform: translateY(-8px) scale(1.02);
-      border-color: #FF6B35;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(255,107,53,0.25), 0 0 60px rgba(168,85,247,0.1);
-      background: rgba(30, 41, 59, 0.8);
+      transform: translateY(-10px) scale(1.015);
+      border-color: rgba(255,107,53,0.28);
+      box-shadow: 0 30px 65px rgba(0,0,0,0.65), 0 0 50px rgba(255,107,53,0.1), 0 0 90px rgba(167,139,250,0.05);
+      background: linear-gradient(145deg, rgba(15,22,42,0.99) 0%, rgba(10,14,24,1) 100%);
     }
     .card:hover::before { opacity: 1; }
+    .card:hover::after { opacity: 1; }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #FFB800 50%, #FACC15 100%);
-      background-size: 200% 200%;
+      background: linear-gradient(135deg, #FF6B35 0%, #FF8C00 45%, #FFB800 100%);
+      background-size: 220% 220%;
       color: white;
       font-weight: 700;
       border: none;
       cursor: pointer;
-      transition: all 0.25s ease;
+      transition: all 0.28s ease;
       position: relative;
       overflow: hidden;
+      letter-spacing: 0.01em;
     }
     .btn-primary::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+      background: linear-gradient(135deg, rgba(255,255,255,0.22) 0%, transparent 55%);
       opacity: 0;
-      transition: opacity 0.2s;
+      transition: opacity 0.22s ease;
     }
     .btn-primary:hover::before { opacity: 1; }
     .btn-primary:hover {
-      transform: scale(1.04);
+      transform: scale(1.045) translateY(-1px);
+      box-shadow: 0 14px 44px rgba(255,107,53,0.55), 0 4px 18px rgba(255,184,0,0.28);
       background-position: 100% 100%;
-      box-shadow: 0 8px 32px rgba(255,107,53,0.5), 0 0 20px rgba(255,184,0,0.3);
     }
     .btn-primary:active { transform: scale(0.97); }
 
     .btn-safety {
-      background: linear-gradient(135deg, #22c55e, #10b981);
+      background: linear-gradient(135deg, #059669, #10D981);
       color: white;
       font-weight: 700;
       border: none;
@@ -316,51 +336,53 @@ const GlobalStyles = () => (
       transition: all 0.25s ease;
     }
     .btn-safety:hover {
-      transform: scale(1.04);
-      box-shadow: 0 8px 32px rgba(34,197,94,0.5);
+      transform: scale(1.04) translateY(-1px);
+      box-shadow: 0 12px 38px rgba(16,217,129,0.5);
     }
 
     .btn-ghost {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid ${C.border};
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
       color: ${C.textMuted};
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.22s ease;
     }
     .btn-ghost:hover {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.09);
       color: ${C.text};
-      border-color: rgba(255,255,255,0.3);
+      border-color: rgba(255,255,255,0.16);
+      transform: translateY(-1px);
     }
 
     .nav-btn { background: transparent; border: none; cursor: pointer; transition: all 0.2s ease; }
-    .nav-btn:hover { background: rgba(255,255,255,0.07) !important; color: white !important; }
+    .nav-btn:hover { background: rgba(255,255,255,0.07) !important; color: white !important; transform: translateY(-1px); }
 
     .input-base {
-      background: rgba(15,23,42,0.8);
-      border: 1px solid ${C.border};
+      background: rgba(8,12,20,0.9);
+      border: 1px solid rgba(255,255,255,0.09);
       color: ${C.text};
-      border-radius: 12px;
-      padding: 11px 14px;
+      border-radius: 13px;
+      padding: 11px 15px;
       font-size: 13.5px;
-      transition: all 0.2s ease;
+      transition: all 0.22s ease;
       outline: none;
       width: 100%;
     }
+    .input-base::placeholder { color: ${C.textFaint}; }
     .input-base:focus {
-      border-color: ${C.orange};
-      background: rgba(15,23,42,0.95);
-      box-shadow: 0 0 0 3px rgba(255,107,53,0.12), 0 0 20px rgba(255,107,53,0.08);
+      border-color: rgba(255,107,53,0.5);
+      background: rgba(11,17,32,0.98);
+      box-shadow: 0 0 0 3px rgba(255,107,53,0.1), 0 0 22px rgba(255,107,53,0.06);
     }
 
-    select.input-base option { background: #0f172a; color: #F8FAFC; }
+    select.input-base option { background: #0b1120; color: #F0F4FF; }
 
     .action-btn {
-      width: 34px; height: 34px; border-radius: 10px;
+      width: 36px; height: 36px; border-radius: 11px;
       display: flex; align-items: center; justify-content: center;
-      border: none; cursor: pointer; transition: all 0.2s ease;
+      border: none; cursor: pointer; transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .action-btn:hover { transform: scale(1.1); }
+    .action-btn:hover { transform: scale(1.14); }
 
     @media (min-width: 768px) { .desktop-nav { display: flex !important; } .mobile-only { display: none !important; } }
     @media (max-width: 767px) { .desktop-nav { display: none !important; } }
@@ -369,13 +391,13 @@ const GlobalStyles = () => (
       background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.8s linear infinite;
-      border-radius: 18px;
+      border-radius: 20px;
     }
 
     .glass-panel {
-      background: rgba(15,23,42,0.7);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgba(11,17,32,0.78);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
       border: 1px solid rgba(255,255,255,0.08);
     }
 
@@ -386,22 +408,22 @@ const GlobalStyles = () => (
     .safety-badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 9px 14px;
-      background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.08));
-      border: 1px solid rgba(34,197,94,0.35);
-      border-radius: 11px;
-      color: #22c55e;
+      gap: 9px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, rgba(16,217,129,0.1), rgba(5,150,105,0.06));
+      border: 1px solid rgba(16,217,129,0.28);
+      border-radius: 12px;
+      color: #10D981;
       font-size: 12px;
       font-weight: 600;
       line-height: 1.4;
     }
     .safety-badge .icon-pulse {
       animation: safetyPulse 2.5s ease-in-out infinite;
-      width: 24px; height: 24px;
+      width: 26px; height: 26px;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(34,197,94,0.18);
+      background: rgba(16,217,129,0.14);
       flex-shrink: 0;
     }
   `}</style>
@@ -901,51 +923,51 @@ const HomePage = ({ apps, onDownload, unlockedApps, loading, settings, onViewDet
 
   return (
     <>
-      <section style={{ padding: '120px 16px 100px', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(255,107,53,0.06) 0%, transparent 60%)' }} />
-        <div style={{ position: 'absolute', top: '-20%', left: '50%', transform: 'translateX(-50%)', width: 800, height: 600, background: 'radial-gradient(ellipse, rgba(255,107,53,0.12) 0%, transparent 65%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: '0', left: '10%', width: 300, height: 300, background: 'radial-gradient(ellipse, rgba(139,92,246,0.08) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', top: '30%', right: '5%', width: 280, height: 280, background: 'radial-gradient(ellipse, rgba(34,197,94,0.06) 0%, transparent 65%)', filter: 'blur(60px)', pointerEvents: 'none' }} />
+      <section style={{ padding: '128px 16px 108px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(255,107,53,0.05) 0%, transparent 55%)' }} />
+        <div style={{ position: 'absolute', top: '-25%', left: '50%', transform: 'translateX(-50%)', width: 900, height: 700, background: 'radial-gradient(ellipse, rgba(255,107,53,0.14) 0%, transparent 65%)', filter: 'blur(90px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '-5%', left: '8%', width: 340, height: 340, background: 'radial-gradient(ellipse, rgba(167,139,250,0.1) 0%, transparent 65%)', filter: 'blur(70px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '25%', right: '4%', width: 300, height: 300, background: 'radial-gradient(ellipse, rgba(16,217,129,0.07) 0%, transparent 65%)', filter: 'blur(70px)', pointerEvents: 'none' }} />
 
         <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.25)', borderRadius: 999, padding: '9px 20px', marginBottom: 24, fontSize: 13, color: C.orange, backdropFilter: 'blur(10px)' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,107,53,0.08)', border: '1px solid rgba(255,107,53,0.22)', borderRadius: 999, padding: '9px 22px', marginBottom: 22, fontSize: 13, color: C.orange, backdropFilter: 'blur(12px)', fontWeight: 600 }}>
             <Sparkles size={13} /> Your Trusted App Source <Zap size={11} style={{ color: C.gold }} />
           </div>
 
           {/* Trust Banner */}
-          <div className="float-anim" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.08))', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 999, padding: '8px 18px', marginBottom: 32, fontSize: 12.5, color: C.green, fontWeight: 600 }}>
+          <div className="float-anim" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'linear-gradient(135deg, rgba(16,217,129,0.1), rgba(5,150,105,0.06))', border: '1px solid rgba(16,217,129,0.28)', borderRadius: 999, padding: '9px 20px', marginBottom: 36, fontSize: 12.5, color: C.green, fontWeight: 600 }}>
             <span style={{ fontSize: 16 }}>🛡️</span> 100% Verified Safe · No Malware · SSL Secured
           </div>
 
-          <h1 style={{ fontSize: 'clamp(48px, 10vw, 100px)', fontWeight: 900, lineHeight: 1.04, marginBottom: 24, letterSpacing: -3 }}>
-            <span className="glow-text" style={{ background: 'linear-gradient(135deg, #FF6B35 0%, #FFB800 50%, #FACC15 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>SunRise</span>
+          <h1 style={{ fontSize: 'clamp(50px, 10.5vw, 108px)', fontWeight: 900, lineHeight: 1.02, marginBottom: 26, letterSpacing: -4 }}>
+            <span className="glow-text" style={{ background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C00 40%, #FFB800 70%, #FACC15 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>SunRise</span>
             <br />
-            <span style={{ background: 'linear-gradient(135deg, #F8FAFC, #94A3B8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Apps</span>
+            <span style={{ background: 'linear-gradient(135deg, #F0F4FF, #8A9AB8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Apps</span>
           </h1>
 
-          <p style={{ fontSize: 'clamp(15px, 2.8vw, 20px)', color: C.textMuted, maxWidth: 520, margin: '0 auto 48px', lineHeight: 1.85 }}>
+          <p style={{ fontSize: 'clamp(15px, 2.8vw, 20px)', color: C.textMuted, maxWidth: 520, margin: '0 auto 52px', lineHeight: 1.9 }}>
             Get the latest <span style={{ color: C.orange, fontWeight: 700 }}>viral Android tools</span> — free, safe & always updated 🚀
           </p>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', marginBottom: 72 }}>
-            <button onClick={() => document.getElementById('apps')?.scrollIntoView({ behavior: 'smooth' })} className="btn-primary glow-btn" style={{ padding: '16px 40px', fontSize: 16, borderRadius: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', marginBottom: 80 }}>
+            <button onClick={() => document.getElementById('apps')?.scrollIntoView({ behavior: 'smooth' })} className="btn-primary glow-btn" style={{ padding: '17px 46px', fontSize: 16, borderRadius: 17, display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700 }}>
               <Download size={18} /> Explore Apps
             </button>
-            <button onClick={() => document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' })} className="btn-ghost" style={{ padding: '16px 30px', fontSize: 16, borderRadius: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={() => document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' })} className="btn-ghost" style={{ padding: '17px 34px', fontSize: 16, borderRadius: 17, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Heart size={16} style={{ color: C.pink }} /> Learn More
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', maxWidth: 460, margin: '0 auto', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', maxWidth: 480, margin: '0 auto', gap: 14 }}>
             {[
-              { v: formatDownloads(totalDL.toString()), l: 'Downloads', ic: <Download size={18} />, c: C.orange, bg: 'rgba(255,107,53,0.08)', bc: 'rgba(255,107,53,0.2)' },
-              { v: pub.filter(a => a.apk_link && a.apk_link !== '#').length + '+', l: 'Apps Live', ic: <Smartphone size={18} />, c: C.blue, bg: 'rgba(96,165,250,0.08)', bc: 'rgba(96,165,250,0.2)' },
-              { v: '4.9★', l: 'Avg Rating', ic: <Star size={18} />, c: C.gold, bg: 'rgba(250,204,21,0.08)', bc: 'rgba(250,204,21,0.2)' },
+              { v: formatDownloads(totalDL.toString()), l: 'Downloads', ic: <Download size={18} />, c: C.orange, bg: 'rgba(255,107,53,0.09)', bc: 'rgba(255,107,53,0.22)' },
+              { v: pub.filter(a => a.apk_link && a.apk_link !== '#').length + '+', l: 'Apps Live', ic: <Smartphone size={18} />, c: C.blue, bg: 'rgba(96,165,250,0.09)', bc: 'rgba(96,165,250,0.22)' },
+              { v: '4.9★', l: 'Avg Rating', ic: <Star size={18} />, c: C.gold, bg: 'rgba(250,204,21,0.09)', bc: 'rgba(250,204,21,0.22)' },
             ].map((s, i) => (
-              <div key={i} style={{ background: s.bg, border: `1px solid ${s.bc}`, borderRadius: 18, padding: '20px 12px', textAlign: 'center', backdropFilter: 'blur(10px)' }}>
+              <div key={i} style={{ background: s.bg, border: `1px solid ${s.bc}`, borderRadius: 20, padding: '22px 12px', textAlign: 'center', backdropFilter: 'blur(14px)' }}>
                 <div style={{ color: s.c, marginBottom: 10, display: 'flex', justifyContent: 'center' }}>{s.ic}</div>
-                <div style={{ fontSize: 24, fontWeight: 900, color: C.text, lineHeight: 1 }}>{s.v}</div>
-                <div style={{ fontSize: 11, color: C.textFaint, marginTop: 6 }}>{s.l}</div>
+                <div style={{ fontSize: 26, fontWeight: 900, color: C.text, lineHeight: 1 }}>{s.v}</div>
+                <div style={{ fontSize: 11, color: C.textFaint, marginTop: 7, fontWeight: 500 }}>{s.l}</div>
               </div>
             ))}
           </div>
@@ -1930,45 +1952,46 @@ export default function App() {
         <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${siteSettings.ad_client_id}`} crossOrigin="anonymous" />
       )}
 
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(4,5,10,0.82)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 66 }}>
             <button onClick={() => go('home')} style={{ display: 'flex', alignItems: 'center', gap: 11, background: 'none', border: 'none', cursor: 'pointer', color: C.text, flexShrink: 0 }}>
-              <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #FF6B35, #FFB800)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(255,107,53,0.35)', flexShrink: 0 }}>
+              <div style={{ width: 38, height: 38, background: 'linear-gradient(135deg, #FF6B35, #FFB800)', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 24px rgba(255,107,53,0.4)', flexShrink: 0 }}>
                 <Sun size={18} style={{ color: 'white' }} />
               </div>
               <span style={{ fontWeight: 900, fontSize: 17, letterSpacing: -0.5 }}>
-                Sun<span style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB800)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Rise</span>
-                <span style={{ color: C.textFaint, fontWeight: 400, fontSize: 14, marginLeft: 5 }}>Apps</span>
+                <span style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB800)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SunRise</span>
+                <span style={{ color: C.textFaint, fontWeight: 400, fontSize: 14, marginLeft: 6 }}>Apps</span>
               </span>
             </button>
 
-            <div className="desktop-nav" style={{ display: 'none', alignItems: 'center', gap: 2 }}>
+            <div className="desktop-nav" style={{ display: 'none', alignItems: 'center', gap: 3 }}>
               {navItems.map(item => (
                 <button key={item.id} onClick={() => go(item.id)} className="nav-btn" style={{
-                  display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 12,
-                  fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none',
-                  background: page === item.id ? 'rgba(255,107,53,0.12)' : item.highlight ? 'rgba(250,204,21,0.07)' : 'transparent',
-                  color: page === item.id ? C.orange : item.highlight ? C.gold : C.textMuted
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '8px 15px', borderRadius: 13,
+                  fontSize: 13, fontWeight: page === item.id ? 700 : 500, cursor: 'pointer', border: 'none',
+                  background: page === item.id ? 'rgba(255,107,53,0.13)' : item.highlight ? 'rgba(250,204,21,0.07)' : 'transparent',
+                  color: page === item.id ? C.orange : item.highlight ? C.gold : C.textMuted,
+                  transition: 'all 0.2s ease',
                 }}>
                   {item.icon}<span>{item.label}</span>
                 </button>
               ))}
             </div>
 
-            <button onClick={() => setMenuOpen(!menuOpen)} className="mobile-only btn-ghost" style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 12, padding: 0 }}>
+            <button onClick={() => setMenuOpen(!menuOpen)} className="mobile-only btn-ghost" style={{ width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 13, padding: 0 }}>
               {menuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
 
           {menuOpen && (
-            <div className="slide-down" style={{ paddingBottom: 16, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 12 }}>
+            <div className="slide-down" style={{ paddingBottom: 18, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 12 }}>
               {navItems.map(item => (
                 <button key={item.id} onClick={() => go(item.id)} style={{
-                  display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 16px', borderRadius: 12, fontSize: 14, fontWeight: 500, textAlign: 'left',
+                  display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '13px 16px', borderRadius: 13, fontSize: 14, fontWeight: page === item.id ? 700 : 500, textAlign: 'left',
                   background: page === item.id ? 'rgba(255,107,53,0.1)' : 'transparent',
                   color: page === item.id ? C.orange : item.highlight ? C.gold : C.textMuted,
-                  border: 'none', cursor: 'pointer'
+                  border: 'none', cursor: 'pointer', transition: 'all 0.2s ease',
                 }}>
                   {item.icon}{item.label}
                 </button>
@@ -1994,18 +2017,18 @@ export default function App() {
       {page === 'privacy' && <PrivacySection />}
       {page === 'contact' && <ContactSection addToast={addToast} />}
 
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '48px 16px', textAlign: 'center', background: 'rgba(15,23,42,0.3)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}>
-          <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #FF6B35, #FFB800)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(255,107,53,0.3)' }}>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '52px 20px', textAlign: 'center', background: 'rgba(8,12,20,0.5)', backdropFilter: 'blur(12px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 18 }}>
+          <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #FF6B35, #FFB800)', borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(255,107,53,0.35)' }}>
             <Sun size={16} style={{ color: 'white' }} />
           </div>
-          <span style={{ fontWeight: 800, color: C.textMuted, fontSize: 15 }}>SunRise Apps</span>
+          <span style={{ fontWeight: 900, fontSize: 16, background: 'linear-gradient(135deg, #FF6B35, #FFB800)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SunRise Apps</span>
         </div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 999, marginBottom: 14, fontSize: 11.5, color: C.green, fontWeight: 600 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 18px', background: 'rgba(16,217,129,0.08)', border: '1px solid rgba(16,217,129,0.22)', borderRadius: 999, marginBottom: 16, fontSize: 11.5, color: C.green, fontWeight: 600 }}>
           🛡️ All apps verified safe by SunRise Security
         </div>
-        <p style={{ color: C.textFaint, fontSize: 12.5, marginBottom: 8 }}>Free viral Android apps — always updated 🚀</p>
-        <p style={{ color: C.textFaint, fontSize: 10.5, opacity: 0.5 }}>© 2026 SunRise Apps · Built with ❤️ in India</p>
+        <p style={{ color: C.textFaint, fontSize: 13, marginBottom: 8, fontWeight: 500 }}>Free viral Android apps — always updated 🚀</p>
+        <p style={{ color: C.textFaint, fontSize: 11, opacity: 0.45 }}>© 2026 SunRise Apps · Built with ❤️ in India</p>
       </footer>
 
       <AppDetailModal app={detailApp} onClose={() => setDetailApp(null)} onDownload={download} unlocked={detailApp ? unlocked.includes(detailApp.id) : false} />
