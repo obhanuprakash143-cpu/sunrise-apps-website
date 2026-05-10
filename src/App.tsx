@@ -502,26 +502,61 @@ const ScrollToTop = () => {
 };
 
 // ============ AD BANNER ============
+// TEST AD CREATIVES — shown when no real AdSense IDs are configured
+const TEST_ADS = {
+  horizontal: [
+    { emoji: '📱', label: 'SPONSORED', title: 'Try Pro Tools Suite', sub: 'Unlock 50+ premium utilities — free trial today!', cta: 'Get Free Trial', color: C.orange, bg: 'rgba(255,107,53,0.07)', bc: 'rgba(255,107,53,0.25)' },
+    { emoji: '🔒', label: 'AD', title: 'VPN Ultra Secure', sub: 'Browse privately. Zero logs. Blazing fast.', cta: 'Install Free', color: C.purple, bg: 'rgba(167,139,250,0.07)', bc: 'rgba(167,139,250,0.25)' },
+  ],
+  rectangle: [
+    { emoji: '🚀', label: 'SPONSORED', title: 'CleanMaster Pro', sub: 'Boost your Android speed by 3×\nFree & trusted by 10M+ users worldwide.', cta: '⬇️ Download Free', color: C.green, bg: 'rgba(16,217,129,0.07)', bc: 'rgba(16,217,129,0.25)' },
+    { emoji: '🎮', label: 'AD', title: 'GameBooster X', sub: 'Ultra-smooth gaming. No lag, no heat.\nOptimized for BGMI, Free Fire, COD.', cta: '⬇️ Install Now', color: C.blue, bg: 'rgba(96,165,250,0.07)', bc: 'rgba(96,165,250,0.25)' },
+  ],
+};
+
 const AdBanner = ({ variant = 'horizontal', settings }: { variant?: 'horizontal' | 'rectangle'; settings: SiteSettings | null }) => {
-  if (!settings?.ads_enabled) {
+  const ads = TEST_ADS[variant];
+  const ad = ads[Math.floor(Date.now() / 30000) % ads.length]; // rotate every 30s
+
+  // Real AdSense: show real ads
+  if (settings?.ads_enabled && settings.ad_client_id && settings.ad_slot_header) {
     return (
-      <div style={{ border: `1px dashed ${C.border}`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', height: variant === 'rectangle' ? 180 : 60, background: 'rgba(255,255,255,0.01)' }}>
-        <p style={{ fontSize: 11, color: C.textFaint }}>Ad space — Enable in Admin → Monetization</p>
-      </div>
-    );
-  }
-  return (
-    <div style={{ border: `1px dashed ${C.border}`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', height: variant === 'rectangle' ? 200 : 72, background: 'rgba(255,255,255,0.01)', overflow: 'hidden' }}>
-      {settings.ad_client_id && settings.ad_slot_header ? (
+      <div style={{ border: `1px dashed ${C.border}`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', height: variant === 'rectangle' ? 200 : 72, background: 'rgba(255,255,255,0.01)', overflow: 'hidden' }}>
         <ins className="adsbygoogle"
           style={{ display: 'block', width: '100%', height: '100%' }}
           data-ad-client={settings.ad_client_id}
           data-ad-slot={variant === 'rectangle' ? settings.ad_slot_sidebar : settings.ad_slot_header}
           data-ad-format="auto"
           data-full-width-responsive="true" />
-      ) : (
-        <p style={{ fontSize: 11, color: C.textFaint }}>📢 AdSense — Add IDs in Admin → Monetization</p>
-      )}
+      </div>
+    );
+  }
+
+  // Test / demo ad — always visible
+  if (variant === 'horizontal') {
+    return (
+      <div style={{ border: `1px solid ${ad.bc}`, borderRadius: 16, display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px', background: ad.bg, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, right: 0, padding: '3px 10px', background: ad.color, borderRadius: '0 16px 0 10px', fontSize: 9, fontWeight: 800, color: 'white', letterSpacing: 1 }}>{ad.label}</div>
+        <div style={{ fontSize: 28, flexShrink: 0 }}>{ad.emoji}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontWeight: 800, color: ad.color, fontSize: 14, marginBottom: 2 }}>{ad.title}</p>
+          <p style={{ color: C.textMuted, fontSize: 12 }}>{ad.sub}</p>
+        </div>
+        <button style={{ flexShrink: 0, padding: '9px 18px', background: ad.color, border: 'none', borderRadius: 12, color: 'white', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>{ad.cta}</button>
+      </div>
+    );
+  }
+
+  // Rectangle test ad
+  return (
+    <div style={{ border: `1px solid ${ad.bc}`, borderRadius: 16, padding: '28px 28px', background: ad.bg, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 12 }}>
+      <div style={{ position: 'absolute', top: 0, right: 0, padding: '3px 12px', background: ad.color, borderRadius: '0 16px 0 10px', fontSize: 9, fontWeight: 800, color: 'white', letterSpacing: 1 }}>{ad.label}</div>
+      <div style={{ fontSize: 42 }}>{ad.emoji}</div>
+      <div>
+        <p style={{ fontWeight: 900, color: ad.color, fontSize: 18, marginBottom: 6 }}>{ad.title}</p>
+        <p style={{ color: C.textMuted, fontSize: 13.5, lineHeight: 1.8, whiteSpace: 'pre-line' }}>{ad.sub}</p>
+      </div>
+      <button style={{ padding: '12px 32px', background: `linear-gradient(135deg, ${ad.color}, ${ad.color}cc)`, border: 'none', borderRadius: 14, color: 'white', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: `0 6px 24px ${ad.color}44` }}>{ad.cta}</button>
     </div>
   );
 };
@@ -628,13 +663,24 @@ const AppDetailModal = ({ app, onClose, onDownload, unlocked }: { app: AppData |
 
           {!isCS && (
             <>
-              <button
-                onClick={() => { onDownload(app); onClose(); }}
-                className="btn-primary glow-btn"
-                style={{ width: '100%', padding: '17px', borderRadius: 16, fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
-              >
-                {unlocked ? <><Download size={20} /> Download APK — Free</> : <><Lock size={20} /> Get APK — Watch Ad</>}
-              </button>
+              {/* === CRYSTAL-CLEAR DOWNLOAD CTA === */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => { onDownload(app); onClose(); }}
+                  className="btn-primary glow-btn"
+                  style={{ width: '100%', padding: '20px', borderRadius: 18, fontSize: 17, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, letterSpacing: 0.2 }}
+                >
+                  {unlocked
+                    ? <><Download size={22} /> 📥 Download App — 100% Free</>
+                    : <><Lock size={20} /> 🎬 Watch Ad · Download App Free</>
+                  }
+                </button>
+                {!unlocked && (
+                  <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11.5, color: C.textFaint }}>
+                    ⏱ Takes only ~5 seconds · Completely free
+                  </div>
+                )}
+              </div>
               <SafetyBadge />
             </>
           )}
@@ -675,19 +721,43 @@ const LockModal = ({ app, onClose, onUnlock }: { app: AppData | null; onClose: (
           <SafetyBadge compact />
 
           {!watching ? (
-            <button onClick={() => setWatching(true)} className="btn-primary" style={{ width: '100%', padding: 16, borderRadius: 15, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20 }}>
-              <Eye size={20} /> Watch Ad to Unlock
-            </button>
+            <>
+              {/* TEST AD CREATIVE inside lock modal */}
+              <div style={{ marginTop: 20, border: '1px solid rgba(96,165,250,0.3)', borderRadius: 16, padding: '16px 18px', background: 'rgba(96,165,250,0.06)', position: 'relative', textAlign: 'left' }}>
+                <div style={{ position: 'absolute', top: 0, right: 0, padding: '3px 10px', background: C.blue, borderRadius: '0 16px 0 10px', fontSize: 9, fontWeight: 800, color: 'white', letterSpacing: 1 }}>AD</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                  <div style={{ fontSize: 28 }}>🔒</div>
+                  <div>
+                    <p style={{ fontWeight: 800, color: C.blue, fontSize: 13 }}>VPN Ultra Secure</p>
+                    <p style={{ color: C.textMuted, fontSize: 11, marginTop: 2 }}>Browse anonymously. Zero logs. Free.</p>
+                  </div>
+                </div>
+                <div style={{ width: '100%', height: 3, background: 'rgba(96,165,250,0.15)', borderRadius: 999 }}>
+                  <div style={{ width: '65%', height: '100%', background: C.blue, borderRadius: 999 }} />
+                </div>
+                <p style={{ fontSize: 10, color: C.textFaint, marginTop: 6 }}>Google Test Ad · Not a real ad</p>
+              </div>
+              <button onClick={() => setWatching(true)} className="btn-primary glow-btn" style={{ width: '100%', padding: 18, borderRadius: 15, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 16, fontWeight: 800 }}>
+                <Eye size={20} /> 🎬 Watch Ad (5 sec) → Download App Free
+              </button>
+              <p style={{ color: C.textFaint, fontSize: 11, marginTop: 10, textAlign: 'center' }}>One short ad keeps the app free for everyone 🙏</p>
+            </>
           ) : (
             <div style={{ background: 'rgba(255,107,53,0.06)', borderRadius: 16, padding: '24px 20px', border: '1px solid rgba(255,107,53,0.2)', marginTop: 20 }}>
-              <p className="pulse" style={{ color: C.orange, fontSize: 14, fontWeight: 700, marginBottom: 16 }}>⏳ Ad playing...</p>
+              {/* Simulated test ad playing */}
+              <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: '14px', marginBottom: 16, border: '1px solid rgba(255,255,255,0.07)', textAlign: 'center', position: 'relative' }}>
+                <div style={{ position: 'absolute', top: 6, right: 8, fontSize: 9, color: C.textFaint, fontWeight: 700 }}>TEST AD</div>
+                <div style={{ fontSize: 32, marginBottom: 6 }}>🚀</div>
+                <p style={{ color: C.text, fontWeight: 700, fontSize: 13, marginBottom: 3 }}>CleanMaster Pro</p>
+                <p style={{ color: C.textMuted, fontSize: 11 }}>Boost your Android 3× faster — free!</p>
+              </div>
+              <p className="pulse" style={{ color: C.orange, fontSize: 14, fontWeight: 700, marginBottom: 16, textAlign: 'center' }}>⏳ Ad playing — almost done!</p>
               <div style={{ width: '100%', background: 'rgba(255,255,255,0.06)', borderRadius: 999, height: 10, overflow: 'hidden' }}>
                 <div style={{ height: '100%', background: 'linear-gradient(90deg, #FF6B35, #FFB800)', borderRadius: 999, transition: 'width 1s linear', width: `${((5 - countdown) / 5) * 100}%` }} />
               </div>
-              <p style={{ color: C.textFaint, fontSize: 12, marginTop: 12 }}>{countdown}s remaining</p>
+              <p style={{ color: C.textFaint, fontSize: 12, marginTop: 12, textAlign: 'center' }}>{countdown}s remaining — download unlocks automatically</p>
             </div>
           )}
-          <p style={{ color: C.textFaint, fontSize: 10, marginTop: 20 }}>Ad placeholder — integrate AdMob/AdSense here</p>
         </div>
       </div>
     </div>
@@ -880,27 +950,41 @@ const AppCard = ({ app, onDownload, unlocked, onViewDetail }: { app: AppData; on
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button
-          onClick={() => !isCS && onDownload(app)}
-          disabled={isCS}
-          className={isCS ? '' : 'btn-primary'}
-          style={{ flex: 1, padding: '12px', borderRadius: 13, fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, border: 'none', cursor: isCS ? 'not-allowed' : 'pointer', background: isCS ? 'rgba(255,255,255,0.04)' : undefined, color: isCS ? C.textFaint : undefined }}
-        >
-          {isCS ? '🔜 Coming Soon' : unlocked ? <><Download size={14} /> Download APK</> : <><Lock size={14} /> Get APK</>}
-        </button>
-        <button onClick={() => onViewDetail(app)} style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,107,53,0.08)', border: '1px solid rgba(255,107,53,0.2)', color: C.orange, cursor: 'pointer' }}>
-          <Eye size={15} />
-        </button>
-        <button onClick={handleShare} style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: C.purple, cursor: 'pointer' }}>
-          <Share2 size={14} />
-        </button>
-      </div>
-
-      {/* Trust mini line */}
-      {!isCS && (
-        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 10.5, color: C.green, opacity: 0.85 }}>
-          <ShieldCheck size={11} /> <span>Verified Safe · Scanned by SunRise Security</span>
+      {/* === CLEAR DOWNLOAD BUTTON — full width, prominent === */}
+      {!isCS ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button
+            onClick={() => onDownload(app)}
+            className="btn-primary glow-btn"
+            style={{ width: '100%', padding: '14px 16px', borderRadius: 14, fontWeight: 800, fontSize: 14.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: 'none', cursor: 'pointer', letterSpacing: 0.1 }}
+          >
+            {unlocked
+              ? <><Download size={17} /> 📥 Download App — Free</>
+              : <><Lock size={16} /> 🎬 Watch Ad · Download App Free</>}
+          </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={() => onViewDetail(app)} style={{ flex: 1, padding: '9px', borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'rgba(255,107,53,0.08)', border: '1px solid rgba(255,107,53,0.2)', color: C.orange, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+              <Eye size={13} /> Details
+            </button>
+            <button onClick={handleShare} style={{ flex: 1, padding: '9px', borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: C.purple, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+              <Share2 size={13} /> Share
+            </button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 10.5, color: C.green, opacity: 0.85 }}>
+            <ShieldCheck size={11} /> <span>Verified Safe · Scanned by SunRise Security</span>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ flex: 1, padding: '12px', borderRadius: 13, fontWeight: 700, fontSize: 13.5, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, color: C.textFaint }}>
+            🔜 Coming Soon
+          </div>
+          <button onClick={() => onViewDetail(app)} style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,107,53,0.08)', border: '1px solid rgba(255,107,53,0.2)', color: C.orange, cursor: 'pointer' }}>
+            <Eye size={15} />
+          </button>
+          <button onClick={handleShare} style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: C.purple, cursor: 'pointer' }}>
+            <Share2 size={14} />
+          </button>
         </div>
       )}
     </div>
@@ -1018,7 +1102,17 @@ const HomePage = ({ apps, onDownload, unlockedApps, loading, settings, onViewDet
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 22 }}>
-              {filtered.map(app => <AppCard key={app.id} app={app} onDownload={onDownload} unlocked={unlockedApps.includes(app.id)} onViewDetail={onViewDetail} />)}
+              {filtered.map((app, idx) => (
+                <>
+                  <AppCard key={app.id} app={app} onDownload={onDownload} unlocked={unlockedApps.includes(app.id)} onViewDetail={onViewDetail} />
+                  {/* Inject a test ad after every 4th app card */}
+                  {(idx + 1) % 4 === 0 && idx !== filtered.length - 1 && (
+                    <div key={`ad-${idx}`} style={{ gridColumn: '1 / -1' }}>
+                      <AdBanner settings={settings} />
+                    </div>
+                  )}
+                </>
+              ))}
             </div>
           )}
         </div>
