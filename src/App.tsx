@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from './supabaseClient.ts';
+import { supabase } from './supabaseClient';
 import { Session } from '@supabase/supabase-js';
 import {
   Sun, Download, Share2, Lock, Shield, Mail,
@@ -536,7 +536,7 @@ const ScreenshotGallery = ({ screenshots }: { screenshots: string[] }) => {
 };
 
 // ============ APP DETAIL MODAL ============
-const AppDetailModal = ({ app, onClose, onDownload, unlocked }: { app: AppData | null; onClose: () => void; onDownload: (a: AppData) => void; unlocked: boolean }) => {
+const AppDetailModal = ({ app, onClose, onDownload }: { app: AppData | null; onClose: () => void; onDownload: (a: AppData) => void }) => {
   if (!app) return null;
   const isCS = !app.apk_link || app.apk_link === '#';
   const icon = app.icon_url
@@ -748,7 +748,7 @@ const ScreenshotUpload = ({ screenshots, onAdd, onRemove, addToast }: {
 };
 
 // ============ APP CARD ============
-const AppCard = ({ app, onDownload, unlocked, onViewDetail }: { app: AppData; onDownload: (a: AppData) => void; unlocked: boolean; onViewDetail: (a: AppData) => void }) => {
+const AppCard = ({ app, onDownload, onViewDetail }: { app: AppData; onDownload: (a: AppData) => void; onViewDetail: (a: AppData) => void }) => {
   const handleShare = () => {
     const text = `🌅 "${app.name}" — Free on SunRise Apps!\n📲 ${window.location.href}`;
     if (navigator.share) navigator.share({ title: app.name, text, url: window.location.href }).catch(() => { });
@@ -957,25 +957,14 @@ const HomePage = ({ apps, onDownload, loading, settings, onViewDetail }: {
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 22 }}>
-              {filtered.map((app, idx) => (
-                <>
-                  <AppCard key={app.id} app={app} onDownload={onDownload} unlocked={unlockedApps.includes(app.id)} onViewDetail={onViewDetail} />
-                  {/* Inject a test ad after every 4th app card */}
-                  {(idx + 1) % 4 === 0 && idx !== filtered.length - 1 && (
-                    <div key={`ad-${idx}`} style={{ gridColumn: '1 / -1' }}>
-                      <AdBanner settings={settings} />
-                    </div>
-                  )}
-                </>
+              {filtered.map((app) => (
+                <AppCard key={app.id} app={app} onDownload={onDownload} onViewDetail={onViewDetail} />
               ))}
             </div>
           )}
         </div>
       </section>
 
-      <div style={{ maxWidth: 760, margin: '0 auto 60px', padding: '0 16px' }}>
-        <AdBanner variant="rectangle" settings={settings} />
-      </div>
     </>
   );
 };
@@ -1883,7 +1872,7 @@ export default function App() {
         <p style={{ color: C.textFaint, fontSize: 11, opacity: 0.45 }}>© 2026 SunRise Apps · Built with ❤️ in India</p>
       </footer>
 
-      <AppDetailModal app={detailApp} onClose={() => setDetailApp(null)} onDownload={download} unlocked={true} />
+      <AppDetailModal app={detailApp} onClose={() => setDetailApp(null)} onDownload={download} />
 
 
       <ScrollToTop />
