@@ -53,11 +53,6 @@ interface ToastItem {
 
 interface SiteSettings {
   id?: number;
-  ads_enabled: boolean;
-  ad_client_id: string;
-  ad_slot_header: string;
-  ad_slot_sidebar: string;
-  ad_slot_article: string;
   updated_at?: string;
 }
 
@@ -501,65 +496,7 @@ const ScrollToTop = () => {
   );
 };
 
-// ============ AD BANNER ============
-// TEST AD CREATIVES — shown when no real AdSense IDs are configured
-const TEST_ADS = {
-  horizontal: [
-    { emoji: '📱', label: 'SPONSORED', title: 'Try Pro Tools Suite', sub: 'Unlock 50+ premium utilities — free trial today!', cta: 'Get Free Trial', color: C.orange, bg: 'rgba(255,107,53,0.07)', bc: 'rgba(255,107,53,0.25)' },
-    { emoji: '🔒', label: 'AD', title: 'VPN Ultra Secure', sub: 'Browse privately. Zero logs. Blazing fast.', cta: 'Install Free', color: C.purple, bg: 'rgba(167,139,250,0.07)', bc: 'rgba(167,139,250,0.25)' },
-  ],
-  rectangle: [
-    { emoji: '🚀', label: 'SPONSORED', title: 'CleanMaster Pro', sub: 'Boost your Android speed by 3×\nFree & trusted by 10M+ users worldwide.', cta: '⬇️ Download Free', color: C.green, bg: 'rgba(16,217,129,0.07)', bc: 'rgba(16,217,129,0.25)' },
-    { emoji: '🎮', label: 'AD', title: 'GameBooster X', sub: 'Ultra-smooth gaming. No lag, no heat.\nOptimized for BGMI, Free Fire, COD.', cta: '⬇️ Install Now', color: C.blue, bg: 'rgba(96,165,250,0.07)', bc: 'rgba(96,165,250,0.25)' },
-  ],
-};
 
-const AdBanner = ({ variant = 'horizontal', settings }: { variant?: 'horizontal' | 'rectangle'; settings: SiteSettings | null }) => {
-  const ads = TEST_ADS[variant];
-  const ad = ads[Math.floor(Date.now() / 30000) % ads.length]; // rotate every 30s
-
-  // Real AdSense: show real ads
-  if (settings?.ads_enabled && settings.ad_client_id && settings.ad_slot_header) {
-    return (
-      <div style={{ border: `1px dashed ${C.border}`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', height: variant === 'rectangle' ? 200 : 72, background: 'rgba(255,255,255,0.01)', overflow: 'hidden' }}>
-        <ins className="adsbygoogle"
-          style={{ display: 'block', width: '100%', height: '100%' }}
-          data-ad-client={settings.ad_client_id}
-          data-ad-slot={variant === 'rectangle' ? settings.ad_slot_sidebar : settings.ad_slot_header}
-          data-ad-format="auto"
-          data-full-width-responsive="true" />
-      </div>
-    );
-  }
-
-  // Test / demo ad — always visible
-  if (variant === 'horizontal') {
-    return (
-      <div style={{ border: `1px solid ${ad.bc}`, borderRadius: 16, display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px', background: ad.bg, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: 0, right: 0, padding: '3px 10px', background: ad.color, borderRadius: '0 16px 0 10px', fontSize: 9, fontWeight: 800, color: 'white', letterSpacing: 1 }}>{ad.label}</div>
-        <div style={{ fontSize: 28, flexShrink: 0 }}>{ad.emoji}</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontWeight: 800, color: ad.color, fontSize: 14, marginBottom: 2 }}>{ad.title}</p>
-          <p style={{ color: C.textMuted, fontSize: 12 }}>{ad.sub}</p>
-        </div>
-        <button style={{ flexShrink: 0, padding: '9px 18px', background: ad.color, border: 'none', borderRadius: 12, color: 'white', fontWeight: 700, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>{ad.cta}</button>
-      </div>
-    );
-  }
-
-  // Rectangle test ad
-  return (
-    <div style={{ border: `1px solid ${ad.bc}`, borderRadius: 16, padding: '28px 28px', background: ad.bg, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 12 }}>
-      <div style={{ position: 'absolute', top: 0, right: 0, padding: '3px 12px', background: ad.color, borderRadius: '0 16px 0 10px', fontSize: 9, fontWeight: 800, color: 'white', letterSpacing: 1 }}>{ad.label}</div>
-      <div style={{ fontSize: 42 }}>{ad.emoji}</div>
-      <div>
-        <p style={{ fontWeight: 900, color: ad.color, fontSize: 18, marginBottom: 6 }}>{ad.title}</p>
-        <p style={{ color: C.textMuted, fontSize: 13.5, lineHeight: 1.8, whiteSpace: 'pre-line' }}>{ad.sub}</p>
-      </div>
-      <button style={{ padding: '12px 32px', background: `linear-gradient(135deg, ${ad.color}, ${ad.color}cc)`, border: 'none', borderRadius: 14, color: 'white', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: `0 6px 24px ${ad.color}44` }}>{ad.cta}</button>
-    </div>
-  );
-};
 
 // ============ SCREENSHOT GALLERY ============
 const ScreenshotGallery = ({ screenshots }: { screenshots: string[] }) => {
@@ -662,27 +599,16 @@ const AppDetailModal = ({ app, onClose, onDownload, unlocked }: { app: AppData |
           </div>
 
           {!isCS && (
-            <>
-              {/* === CRYSTAL-CLEAR DOWNLOAD CTA === */}
-              <div style={{ position: 'relative' }}>
-                <button
-                  onClick={() => { onDownload(app); onClose(); }}
-                  className="btn-primary glow-btn"
-                  style={{ width: '100%', padding: '20px', borderRadius: 18, fontSize: 17, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, letterSpacing: 0.2 }}
-                >
-                  {unlocked
-                    ? <><Download size={22} /> 📥 Download App — 100% Free</>
-                    : <><Lock size={20} /> 🎬 Watch Ad · Download App Free</>
-                  }
-                </button>
-                {!unlocked && (
-                  <div style={{ textAlign: 'center', marginTop: 8, fontSize: 11.5, color: C.textFaint }}>
-                    ⏱ Takes only ~5 seconds · Completely free
-                  </div>
-                )}
-              </div>
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => { onDownload(app); onClose(); }}
+                className="btn-primary glow-btn"
+                style={{ width: '100%', padding: '20px', borderRadius: 18, fontSize: 17, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, letterSpacing: 0.2 }}
+              >
+                <Download size={22} /> 📥 Download App — 100% Free
+              </button>
               <SafetyBadge />
-            </>
+            </div>
           )}
           {isCS && (
             <div style={{ width: '100%', padding: '17px', borderRadius: 16, fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, color: C.textFaint }}>
@@ -695,74 +621,7 @@ const AppDetailModal = ({ app, onClose, onDownload, unlocked }: { app: AppData |
   );
 };
 
-// ============ LOCK MODAL ============
-const LockModal = ({ app, onClose, onUnlock }: { app: AppData | null; onClose: () => void; onUnlock: () => void }) => {
-  const [countdown, setCountdown] = useState(5);
-  const [watching, setWatching] = useState(false);
-  useEffect(() => {
-    if (!watching) return;
-    if (countdown <= 0) { onUnlock(); return; }
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [watching, countdown, onUnlock]);
-  useEffect(() => { if (app) { setCountdown(5); setWatching(false); } }, [app]);
-  if (!app) return null;
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 700, background: 'rgba(0,0,0,0.96)', backdropFilter: 'blur(24px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} className="fade-in-scale glass-panel" style={{ borderRadius: 24, padding: '40px 32px', maxWidth: 380, width: '100%', position: 'relative', boxShadow: '0 0 80px rgba(255,107,53,0.2)', border: '1px solid rgba(255,107,53,0.2)' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, color: C.textFaint, background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer', padding: 8, borderRadius: 10 }}><X size={16} /></button>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: 80, height: 80, margin: '0 auto 24px', borderRadius: 24, background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(255,107,53,0.2)' }}>
-            <Lock style={{ color: C.orange }} size={34} />
-          </div>
-          <h3 style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 8 }}>Unlock Download</h3>
-          <p style={{ color: C.textMuted, fontSize: 13.5, marginBottom: 24, lineHeight: 1.7 }}>{app.name}</p>
 
-          <SafetyBadge compact />
-
-          {!watching ? (
-            <>
-              {/* TEST AD CREATIVE inside lock modal */}
-              <div style={{ marginTop: 20, border: '1px solid rgba(96,165,250,0.3)', borderRadius: 16, padding: '16px 18px', background: 'rgba(96,165,250,0.06)', position: 'relative', textAlign: 'left' }}>
-                <div style={{ position: 'absolute', top: 0, right: 0, padding: '3px 10px', background: C.blue, borderRadius: '0 16px 0 10px', fontSize: 9, fontWeight: 800, color: 'white', letterSpacing: 1 }}>AD</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                  <div style={{ fontSize: 28 }}>🔒</div>
-                  <div>
-                    <p style={{ fontWeight: 800, color: C.blue, fontSize: 13 }}>VPN Ultra Secure</p>
-                    <p style={{ color: C.textMuted, fontSize: 11, marginTop: 2 }}>Browse anonymously. Zero logs. Free.</p>
-                  </div>
-                </div>
-                <div style={{ width: '100%', height: 3, background: 'rgba(96,165,250,0.15)', borderRadius: 999 }}>
-                  <div style={{ width: '65%', height: '100%', background: C.blue, borderRadius: 999 }} />
-                </div>
-                <p style={{ fontSize: 10, color: C.textFaint, marginTop: 6 }}>Google Test Ad · Not a real ad</p>
-              </div>
-              <button onClick={() => setWatching(true)} className="btn-primary glow-btn" style={{ width: '100%', padding: 18, borderRadius: 15, fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 16, fontWeight: 800 }}>
-                <Eye size={20} /> 🎬 Watch Ad (5 sec) → Download App Free
-              </button>
-              <p style={{ color: C.textFaint, fontSize: 11, marginTop: 10, textAlign: 'center' }}>One short ad keeps the app free for everyone 🙏</p>
-            </>
-          ) : (
-            <div style={{ background: 'rgba(255,107,53,0.06)', borderRadius: 16, padding: '24px 20px', border: '1px solid rgba(255,107,53,0.2)', marginTop: 20 }}>
-              {/* Simulated test ad playing */}
-              <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 12, padding: '14px', marginBottom: 16, border: '1px solid rgba(255,255,255,0.07)', textAlign: 'center', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: 6, right: 8, fontSize: 9, color: C.textFaint, fontWeight: 700 }}>TEST AD</div>
-                <div style={{ fontSize: 32, marginBottom: 6 }}>🚀</div>
-                <p style={{ color: C.text, fontWeight: 700, fontSize: 13, marginBottom: 3 }}>CleanMaster Pro</p>
-                <p style={{ color: C.textMuted, fontSize: 11 }}>Boost your Android 3× faster — free!</p>
-              </div>
-              <p className="pulse" style={{ color: C.orange, fontSize: 14, fontWeight: 700, marginBottom: 16, textAlign: 'center' }}>⏳ Ad playing — almost done!</p>
-              <div style={{ width: '100%', background: 'rgba(255,255,255,0.06)', borderRadius: 999, height: 10, overflow: 'hidden' }}>
-                <div style={{ height: '100%', background: 'linear-gradient(90deg, #FF6B35, #FFB800)', borderRadius: 999, transition: 'width 1s linear', width: `${((5 - countdown) / 5) * 100}%` }} />
-              </div>
-              <p style={{ color: C.textFaint, fontSize: 12, marginTop: 12, textAlign: 'center' }}>{countdown}s remaining — download unlocks automatically</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // ============ FILE UPLOAD ============
 const FileUpload = ({ label, accept, bucket, folder, onUploadComplete, currentUrl, addToast, hint }: {
@@ -958,9 +817,7 @@ const AppCard = ({ app, onDownload, unlocked, onViewDetail }: { app: AppData; on
             className="btn-primary glow-btn"
             style={{ width: '100%', padding: '14px 16px', borderRadius: 14, fontWeight: 800, fontSize: 14.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: 'none', cursor: 'pointer', letterSpacing: 0.1 }}
           >
-            {unlocked
-              ? <><Download size={17} /> 📥 Download App — Free</>
-              : <><Lock size={16} /> 🎬 Watch Ad · Download App Free</>}
+            <Download size={17} /> 📥 Download App — Free
           </button>
           <div style={{ display: 'flex', gap: 6 }}>
             <button onClick={() => onViewDetail(app)} style={{ flex: 1, padding: '9px', borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'rgba(255,107,53,0.08)', border: '1px solid rgba(255,107,53,0.2)', color: C.orange, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
@@ -992,8 +849,8 @@ const AppCard = ({ app, onDownload, unlocked, onViewDetail }: { app: AppData; on
 };
 
 // ============ HOME PAGE ============
-const HomePage = ({ apps, onDownload, unlockedApps, loading, settings, onViewDetail }: {
-  apps: AppData[]; onDownload: (a: AppData) => void; unlockedApps: number[]; loading: boolean; settings: SiteSettings | null; onViewDetail: (a: AppData) => void;
+const HomePage = ({ apps, onDownload, loading, settings, onViewDetail }: {
+  apps: AppData[]; onDownload: (a: AppData) => void; loading: boolean; settings: SiteSettings | null; onViewDetail: (a: AppData) => void;
 }) => {
   const [search, setSearch] = useState('');
   const [cat, setCat] = useState('All');
@@ -1058,9 +915,7 @@ const HomePage = ({ apps, onDownload, unlockedApps, loading, settings, onViewDet
         </div>
       </section>
 
-      <div style={{ maxWidth: 860, margin: '0 auto 32px', padding: '0 16px' }}>
-        <AdBanner settings={settings} />
-      </div>
+
 
       <section id="apps" style={{ padding: '60px 16px 80px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -1071,7 +926,7 @@ const HomePage = ({ apps, onDownload, unlockedApps, loading, settings, onViewDet
             <h2 style={{ fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: 900, color: C.text, marginBottom: 14, letterSpacing: -1 }}>
               App <span style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB800, #ec4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Collection</span>
             </h2>
-            <p style={{ color: C.textMuted, fontSize: 15, lineHeight: 1.7 }}>All apps free — watch a short ad to download · 🛡️ Verified Safe</p>
+            <p style={{ color: C.textMuted, fontSize: 15, lineHeight: 1.7 }}>All apps free — 100% Verified Safe · Always Updated</p>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, maxWidth: 580, margin: '0 auto 40px' }}>
@@ -1178,88 +1033,7 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
   );
 };
 
-// ============ MONETIZATION TAB ============
-const MonetizationTab = ({ addToast }: { addToast: (msg: string, type: ToastItem['type']) => void }) => {
-  const [settings, setSettings] = useState<SiteSettings>({ ads_enabled: false, ad_client_id: '', ad_slot_header: '', ad_slot_sidebar: '', ad_slot_article: '' });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const { data, error } = await supabase.from('settings').select('*').single();
-        if (error && error.code !== 'PGRST116') throw error;
-        if (data) setSettings(data);
-      } catch (e: any) { addToast(`❌ ${e.message}`, 'error'); }
-      finally { setLoading(false); }
-    };
-    fetch();
-  }, [addToast]);
-
-  const save = async () => {
-    setSaving(true);
-    try {
-      const { data: existing } = await supabase.from('settings').select('id').single();
-      if (existing) {
-        const { error } = await supabase.from('settings').update({ ...settings, updated_at: new Date().toISOString() }).eq('id', existing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('settings').insert([{ ...settings }]);
-        if (error) throw error;
-      }
-      addToast('✅ Monetization settings saved!', 'success');
-    } catch (e: any) { addToast(`❌ ${e.message}`, 'error'); }
-    finally { setSaving(false); }
-  };
-
-  if (loading) return <div style={{ textAlign: 'center', padding: 60 }}><Loader2 size={28} className="spin" style={{ color: C.orange, margin: '0 auto' }} /></div>;
-
-  return (
-    <div>
-      <div style={{ marginBottom: 28 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 9 }}>
-          <DollarSign size={18} style={{ color: C.gold }} /> Google AdSense Settings
-        </h3>
-        <p style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.7 }}>Control all ads from here. Toggle on/off and update your AdSense IDs anytime.</p>
-      </div>
-
-      <div style={{ background: settings.ads_enabled ? 'rgba(34,197,94,0.06)' : 'rgba(251,191,36,0.06)', border: `1px solid ${settings.ads_enabled ? 'rgba(34,197,94,0.22)' : 'rgba(251,191,36,0.22)'}`, borderRadius: 16, padding: '20px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setSettings(s => ({ ...s, ads_enabled: !s.ads_enabled }))}>
-        <div>
-          <p style={{ fontWeight: 700, color: C.text, fontSize: 14, marginBottom: 4 }}>{settings.ads_enabled ? '🟢 Ads are ENABLED' : '🔴 Ads are DISABLED'}</p>
-          <p style={{ color: C.textMuted, fontSize: 12 }}>{settings.ads_enabled ? 'Google AdSense is running on the website' : 'No ads are shown anywhere on the website'}</p>
-        </div>
-        {settings.ads_enabled ? <ToggleRight size={34} style={{ color: C.green, flexShrink: 0 }} /> : <ToggleLeft size={34} style={{ color: C.amber, flexShrink: 0 }} />}
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
-        {[
-          { key: 'ad_client_id', label: 'Publisher ID (data-ad-client)', ph: 'ca-pub-1234567890123456', hint: 'Your main AdSense publisher ID' },
-          { key: 'ad_slot_header', label: 'Header Banner Slot ID', ph: '1234567890', hint: 'Ad slot for the top horizontal banner' },
-          { key: 'ad_slot_sidebar', label: 'Rectangle/Sidebar Slot ID', ph: '0987654321', hint: 'Ad slot for the bottom rectangle banner' },
-          { key: 'ad_slot_article', label: 'In-Article Slot ID (optional)', ph: '1122334455', hint: 'Ad slot for in-content placements' },
-        ].map(f => (
-          <div key={f.key}>
-            <label style={{ display: 'block', fontSize: 11.5, color: C.textFaint, marginBottom: 5, fontWeight: 600 }}>{f.label}</label>
-            <p style={{ fontSize: 11, color: C.textFaint, marginBottom: 7, opacity: 0.7 }}>{f.hint}</p>
-            <input value={(settings as any)[f.key] || ''} onChange={e => setSettings(s => ({ ...s, [f.key]: e.target.value }))} placeholder={f.ph} className="input-base" />
-          </div>
-        ))}
-      </div>
-
-      <div style={{ background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.2)', borderRadius: 14, padding: '16px', marginBottom: 24 }}>
-        <p style={{ color: C.gold, fontSize: 12.5, fontWeight: 700, marginBottom: 8 }}>💡 How to get your AdSense IDs</p>
-        {['1. Go to adsense.google.com', '2. Ads → By ad unit → Create new ad unit', '3. Copy the data-ad-client value (ca-pub-xxxxx)', '4. Copy the data-ad-slot value for each placement', '5. Paste them in the fields above and Save'].map((s, i) => (
-          <p key={i} style={{ fontSize: 12, color: C.textMuted, marginBottom: 3 }}>{s}</p>
-        ))}
-      </div>
-
-      <button onClick={save} disabled={saving} className="btn-primary" style={{ padding: '13px 30px', borderRadius: 14, fontSize: 14, display: 'flex', alignItems: 'center', gap: 9, opacity: saving ? 0.55 : 1 }}>
-        {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
-        {saving ? 'Saving...' : 'Save Monetization Settings'}
-      </button>
-    </div>
-  );
-};
 
 // ============ TECH DOCS TAB ============
 const TechDocsTab = () => {
@@ -1365,7 +1139,7 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
   refreshApps: () => Promise<void>; isRefreshing: boolean;
   addToast: (msg: string, type: ToastItem['type']) => void;
 }) => {
-  const [tab, setTab] = useState<'apps' | 'feedbacks' | 'monetization' | 'docs'>('apps');
+  const [tab, setTab] = useState<'apps' | 'feedbacks' | 'docs'>('apps');
   const [editId, setEditId] = useState<number | null>(null);
   const blank: Partial<AppData> = { name: '', version: '1.0.0', description: '', apk_link: '', badge: 'New', icon: '📱', icon_url: '', screenshots: [], downloads: '0', size: '0 MB', category: '📱 Tools', rating: '4.5', updated: new Date().toISOString().slice(0, 10), published: false };
   const [form, setForm] = useState<Partial<AppData>>(blank);
@@ -1470,7 +1244,6 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
   const adminTabs = [
     { k: 'apps' as const, ic: <Smartphone size={14} />, lb: 'Apps', c: C.orange },
     { k: 'feedbacks' as const, ic: <MessageSquare size={14} />, lb: 'Feedbacks', c: C.blue, badge: unread },
-    { k: 'monetization' as const, ic: <DollarSign size={14} />, lb: 'Monetization', c: C.gold },
     { k: 'docs' as const, ic: <FileText size={14} />, lb: 'Tech Docs', c: C.purple },
   ];
 
@@ -1763,7 +1536,7 @@ const AdminPage = ({ apps, onLogout, session, refreshApps, isRefreshing, addToas
           </div>
         )}
 
-        {tab === 'monetization' && <MonetizationTab addToast={addToast} />}
+
         {tab === 'docs' && <TechDocsTab />}
       </div>
     </section>
@@ -1784,7 +1557,7 @@ const AboutSection = () => (
               About <span style={{ background: 'linear-gradient(135deg, #FF6B35, #FFB800)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SunRise Apps</span>
             </h2>
             <p style={{ color: C.textMuted, marginBottom: 14, lineHeight: 1.9, fontSize: 15 }}>Independent Android developer from India 🇮🇳, building viral utility apps that solve real everyday problems.</p>
-            <p style={{ color: C.textMuted, marginBottom: 28, lineHeight: 1.9, fontSize: 15 }}>Every sunrise brings new possibilities — free tools for everyone, powered by non-intrusive ads.</p>
+            <p style={{ color: C.textMuted, marginBottom: 28, lineHeight: 1.9, fontSize: 15 }}>Every sunrise brings new possibilities — free tools for everyone, safe and secure.</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12 }}>
               <a href="https://instagram.com/SunRise_Apps" target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 18px', background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.2)', borderRadius: 14, color: '#f472b6', fontSize: 13, fontWeight: 500 }}>📸 @SunRise_Apps</a>
               <a href="mailto:thesunrisecode@gmail.com" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 18px', background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)', borderRadius: 14, color: C.blue, fontSize: 13 }}><Mail size={14} /> thesunrisecode@gmail.com</a>
@@ -1831,9 +1604,9 @@ const PrivacySection = () => (
       <div className="glass-panel" style={{ borderRadius: 22, padding: '28px 26px' }}>
         {[
           { t: '1. Data We Collect', d: 'We collect only what you voluntarily provide through the contact form (name, email, message). No tracking scripts, no cookies without consent, no hidden data collection.' },
-          { t: '2. Advertisements', d: 'Google AdSense and AdMob may use anonymous device identifiers for personalized ads. You may opt out at any time via your device settings or at g.co/privacytools.' },
+          { t: '2. Advertisements', d: 'We do not show any third-party advertisements on our platform. Your experience is 100% ad-free.' },
           { t: '3. Data Security', d: 'All data transmission is secured with HTTPS/TLS encryption. Your contact form data is stored securely in our database and never sold or shared with third parties.' },
-          { t: '4. Third-Party Services', d: 'We use Supabase (database), Google Analytics (traffic insights), and Google AdSense. Each operates under their own privacy policy, which we encourage you to review.' },
+          { t: '4. Third-Party Services', d: 'We use Supabase (database) and Google Analytics (traffic insights). Each operates under their own privacy policy, which we encourage you to review.' },
           { t: "5. Children's Privacy", d: 'Our services are not directed at children under 13. We do not knowingly collect personal information from minors. If discovered, such data will be immediately deleted.' },
           { t: '6. Your Rights', d: 'You have the right to request deletion of your data at any time. Contact us at thesunrisecode@gmail.com and we will respond within 48 hours.' },
           { t: '7. Policy Updates', d: 'We may update this policy occasionally. Significant changes will be communicated clearly. Continued use of our services after changes constitutes acceptance.' },
@@ -1944,7 +1717,6 @@ export default function App() {
   const [page, setPage] = useState('home');
   const [modal, setModal] = useState<AppData | null>(null);
   const [detailApp, setDetailApp] = useState<AppData | null>(null);
-  const [unlocked, setUnlocked] = useState<number[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -2000,20 +1772,8 @@ export default function App() {
   }, [addToast]);
 
   const download = useCallback((app: AppData) => {
-    if (unlocked.includes(app.id)) {
-      performSafeDownload(app);
-    } else {
-      setModal(app);
-    }
-  }, [unlocked, performSafeDownload]);
-
-  const unlock = useCallback(() => {
-    if (modal) {
-      setUnlocked(p => [...p, modal.id]);
-      performSafeDownload(modal);
-      setModal(null);
-    }
-  }, [modal, performSafeDownload]);
+    performSafeDownload(app);
+  }, [performSafeDownload]);
 
   const go = (p: string) => { setPage(p); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
@@ -2042,9 +1802,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text }}>
       <GlobalStyles />
 
-      {siteSettings?.ads_enabled && siteSettings.ad_client_id && (
-        <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${siteSettings.ad_client_id}`} crossOrigin="anonymous" />
-      )}
+
 
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(4,5,10,0.82)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 20px' }}>
@@ -2097,7 +1855,7 @@ export default function App() {
 
       {page === 'home' && (
         <>
-          <HomePage apps={apps} onDownload={download} unlockedApps={unlocked} loading={loading || refreshing} settings={siteSettings} onViewDetail={setDetailApp} />
+          <HomePage apps={apps} onDownload={download} loading={loading || refreshing} settings={siteSettings} onViewDetail={setDetailApp} />
           <AboutSection />
           <PrivacySection />
           <ContactSection addToast={addToast} />
@@ -2125,9 +1883,9 @@ export default function App() {
         <p style={{ color: C.textFaint, fontSize: 11, opacity: 0.45 }}>© 2026 SunRise Apps · Built with ❤️ in India</p>
       </footer>
 
-      <AppDetailModal app={detailApp} onClose={() => setDetailApp(null)} onDownload={download} unlocked={detailApp ? unlocked.includes(detailApp.id) : false} />
+      <AppDetailModal app={detailApp} onClose={() => setDetailApp(null)} onDownload={download} unlocked={true} />
 
-      <LockModal app={modal} onClose={() => setModal(null)} onUnlock={unlock} />
+
       <ScrollToTop />
       <Toast toasts={toasts} removeToast={removeToast} />
     </div>
